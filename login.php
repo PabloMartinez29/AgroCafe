@@ -95,7 +95,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         .form-group {
-            margin-bottom: 1rem;
+            margin-bottom: 2rem;
+            text-align: left; 
+            padding: 0 1rem; 
         }
 
         .form-group label {
@@ -111,7 +113,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             border: 2px solid #ddd;
             border-radius: 8px;
             font-size: 1rem;
+            box-sizing: border-box;
+            display: block; 
+            margin: 0 auto; 
         }
+
 
         .form-group input:focus {
             outline: none;

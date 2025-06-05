@@ -85,7 +85,7 @@
         }
 
         .hero {
-            background: linear-gradient(rgba(139, 69, 19, 0.8), rgba(160, 82, 45, 0.8)), url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600"><rect fill="%23228B22" width="1200" height="600"/><circle fill="%238B4513" cx="200" cy="150" r="30"/><circle fill="%23A0522D" cx="400" cy="200" r="25"/><circle fill="%23CD853F" cx="600" cy="180" r="35"/><circle fill="%23DEB887" cx="800" cy="160" r="28"/><circle fill="%23F4A460" cx="1000" cy="190" r="32"/></svg>');
+            background: url('img/fondo.jpg');
             background-size: cover;
             background-position: center;
             height: 100vh;
@@ -94,6 +94,22 @@
             justify-content: center;
             text-align: center;
             color: white;
+        }
+
+        .hero::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); 
+            z-index: 0;
+        }
+
+        .hero > * {
+            position: relative;
+            z-index: 1;
         }
 
         .hero-content {

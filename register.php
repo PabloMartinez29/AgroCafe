@@ -72,6 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
             width: 100%;
             max-width: 500px;
+            text-align: left;
         }
         
         .error {
@@ -104,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         .form-group {
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
         }
         
         .form-group label {
@@ -120,6 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             border: 2px solid #ddd;
             border-radius: 8px;
             font-size: 1rem;
+            box-sizing: border-box;
         }
         
         .form-group input:focus {
@@ -130,9 +132,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-    
-            
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
         }
 
         .btn {
