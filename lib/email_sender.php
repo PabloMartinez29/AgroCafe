@@ -29,10 +29,15 @@ class EmailSender {
     public function enviarFactura($facturaId, $emailDestino) {
         try {
             $factura = fetchOne("
-                SELECT f.*, v.cantidad, v.precio_kg, v.total as venta_total,
+                SELECT f.*, 
+                       COALESCE(v.cantidad, comp.cantidad) as cantidad,
+                       COALESCE(v.precio_kg, comp.precio_kg) as precio_kg,
+                       COALESCE(v.total, comp.total, f.total) as total,
                        COALESCE(c.nombre, v.cliente_nombre, u.nombre) as cliente_nombre,
                        COALESCE(c.email, u.email, ?) as cliente_email,
-                       tc.nombre as tipo_cafe, tc.variedad, f.tipo_transaccion
+                       tc.nombre as tipo_cafe, 
+                       tc.variedad, 
+                       f.tipo_transaccion
                 FROM facturas f
                 LEFT JOIN ventas v ON f.venta_id = v.id
                 LEFT JOIN cooperativas c ON v.cooperativa_id = c.id
@@ -73,7 +78,7 @@ class EmailSender {
     private function generarCuerpoEmail($factura) {
         $tipoTransaccion = ucfirst($factura['tipo_transaccion']);
         return '
-        <!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;line-height:1.6;color:#333;}.header{background:#8B4513;color:white;padding:20px;text-align:center;}.content{padding:20px;}.footer{background:#f8f9fa;padding:15px;text-align:center;font-size:12px;color:#666;}.highlight{background:#fff3cd;padding:10px;border-left:4px solid #ffc107;margin:15px 0;}</style></head><body><div class="header"><h1>AgroCafe</h1><p>Factura Electrónica</p></div><div class="content"><h2>Estimado/a ' . htmlspecialchars($factura['cliente_nombre']) . ',</h2><p>Nos complace enviarle la factura correspondiente a su ' . $tipoTransaccion . ' de café:</p><div class="highlight"><strong>Factura:</strong> ' . $factura['numero_factura'] . '<br><strong>Fecha:</strong> ' . date('d/m/Y', strtotime($factura['fecha_factura'])) . '<br><strong>Producto:</strong> ' . htmlspecialchars($factura['tipo_cafe']) . ' (' . ucfirst($factura['variedad']) . ')<br><strong>Cantidad:</strong> ' . number_format($factura['tipo_transaccion'] === 'venta' ? $factura['cantidad'] : $factura['cantidad'], 2) . ' kg<br><strong>Total:</strong> $' . number_format($factura['total'], 0, ',', '.') . '</div><p>Adjunto encontrará la factura en formato PDF para sus registros.</p><p>Si tiene alguna pregunta, no dude en contactarnos.</p><p>Gracias por confiar en AgroCafé.</p><p>Cordialmente,<br><strong>Equipo AgroCafé</strong></p></div><div class="footer"><p>AgroCafé - Sistema de Gestión de Café<br>Email: agrocafe1129@gmail.com | Teléfono: +57 350 888 4148</p></div></body></html>';
+        <!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;line-height:1.6;color:#333;}.header{background:#8B4513;color:white;padding:20px;text-align:center;}.content{padding:20px;}.footer{background:#f8f9fa;padding:15px;text-align:center;font-size:12px;color:#666;}.highlight{background:#fff3cd;padding:10px;border-left:4px solid #ffc107;margin:15px 0;}</style></head><body><div class="header"><h1>AgroCafe</h1><p>Factura Electrónica</p></div><div class="content"><h2>Estimado/a ' . htmlspecialchars($factura['cliente_nombre']) . ',</h2><p>Nos complace enviarle la factura correspondiente a su ' . $tipoTransaccion . ' de café:</p><div class="highlight"><strong>Factura:</strong> ' . $factura['numero_factura'] . '<br><strong>Fecha:</strong> ' . date('d/m/Y', strtotime($factura['fecha_factura'])) . '<br><strong>Producto:</strong> ' . htmlspecialchars($factura['tipo_cafe']) . ' (' . ucfirst($factura['variedad']) . ')<br><strong>Cantidad:</strong> ' . number_format($factura['tipo_transaccion'] === 'venta' ? $factura['cantidad'] : $factura['cantidad'], 2) . ' kg<br><strong>Total:</strong> $' . number_format($factura['total'] ?? 0, 0, ',', '.') . '</div><p>Adjunto encontrará la factura en formato PDF para sus registros.</p><p>Si tiene alguna pregunta, no dude en contactarnos.</p><p>Gracias por confiar en AgroCafé.</p><p>Cordialmente,<br><strong>Equipo AgroCafé</strong></p></div><div class="footer"><p>AgroCafé - Sistema de Gestión de Café<br>Email: agrocafe1129@gmail.com | Teléfono: +57 350 888 4148</p></div></body></html>';
     }
     
     private function generarPDFTemporal($factura) {
@@ -83,9 +88,11 @@ class EmailSender {
             $pdfContent = PDFGenerator::generarFactura($factura['id']);
         } else {
             $compra = fetchOne("SELECT compra_id FROM facturas WHERE id = ?", [$factura['id']]);
-            if ($compra) {
+            if ($compra && $compra['compra_id'] !== null) {
+                error_log("Intentando generar PDF con compraId: " . $compra['compra_id']);
                 $pdfContent = PDFGenerator::generarFacturaCampesino($compra['compra_id']);
             } else {
+                error_log("Compra no encontrada o compra_id nulo para factura ID: {$factura['id']}");
                 $pdfContent = false;
             }
         }

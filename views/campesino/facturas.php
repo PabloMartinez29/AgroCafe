@@ -6,17 +6,38 @@ require_once 'lib/pdf_generator.php';
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'download_pdf') {
     $compraId = intval($_POST['compra_id']);
     
-   
     $compra = fetchOne("SELECT * FROM compras WHERE id = ? AND campesino_id = ?", [$compraId, $_SESSION['user_id']]);
     
     if ($compra) {
-        PDFGenerator::generarFacturaCampesino($compraId);
-        exit();
+        ob_start();
+        $pdfContent = PDFGenerator::generarFacturaCampesino($compraId);
+        if ($pdfContent) {
+            // Guarda el PDF en un archivo temporal para depuración
+            $tempFile = 'temp_factura_' . $compraId . '.pdf';
+            file_put_contents($tempFile, $pdfContent);
+            error_log("PDF guardado en: $tempFile para compra_id: $compraId con longitud: " . strlen($pdfContent));
+
+            // Verifica si el contenido comienza con el encabezado PDF válido
+            if (substr($pdfContent, 0, 4) !== '%PDF') {
+                error_log("Error: El contenido no comienza con %PDF para compra_id: $compraId");
+            }
+
+            ob_end_clean();
+            header('Content-Type: application/pdf');
+            header('Content-Disposition: attachment; filename="factura_campesino_FC' . str_pad($compraId, 3, '0', STR_PAD_LEFT) . '.pdf"');
+            echo $pdfContent;
+            exit();
+        } else {
+            ob_end_clean();
+            error_log("Fallo al generar el PDF para compra_id: $compraId");
+            http_response_code(500);
+            echo 'Error al generar el PDF. Consulta los logs para más detalles.';
+            exit();
+        }
     } else {
         $error = "No tienes permisos para descargar esta factura";
     }
 }
-
 
 $campesino_id = $_SESSION['user_id'];
 

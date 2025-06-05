@@ -131,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 1rem;
-            margin-left: 15px;
+    
             
         }
 
@@ -236,6 +236,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 </div>
             </div>
             
+
             <button type="submit" class="btn">
                 <i class="fas fa-user-plus"></i>
                 Registrarse

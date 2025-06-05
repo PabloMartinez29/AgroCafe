@@ -1,12 +1,10 @@
 <?php
 session_start();
 
-
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'campesino') {
     header('Location: login.php');
     exit();
 }
-
 
 $view = isset($_GET['view']) ? $_GET['view'] : 'historial';
 $allowed_views = ['historial', 'pagos', 'facturas', 'analisis'];
@@ -14,14 +12,15 @@ $allowed_views = ['historial', 'pagos', 'facturas', 'analisis'];
 if (!in_array($view, $allowed_views)) {
     $view = 'historial';
 }
-?>
 
+ob_start();
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Campesino - CaféTrade</title>
+    <title>AgroCafé - Campesino</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         * {
@@ -162,7 +161,7 @@ if (!in_array($view, $allowed_views)) {
     <div class="dashboard-container">
         <nav class="sidebar">
             <div class="sidebar-header">
-                <h2><i class="fas fa-coffee"></i> CaféTrade</h2>
+                <h2><i class="fas fa-coffee"></i> AgroCafé</h2>
                 <div class="user-info">
                     <i class="fas fa-user"></i>
                     <?php echo $_SESSION['user_name']; ?>
@@ -210,3 +209,5 @@ if (!in_array($view, $allowed_views)) {
     </div>
 </body>
 </html>
+<?php
+ob_end_flush(); 

@@ -2,8 +2,6 @@
 require_once 'config/database.php';
 require_once 'lib/email_sender.php';
 
-
-
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['action'])) {
         switch ($_POST['action']) {
@@ -11,7 +9,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $facturaId = intval($_POST['factura_id']);
                 $email = trim($_POST['email']);
                 
-                // Validar el email
                 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     $error = "La dirección de correo electrónico no es válida: " . htmlspecialchars($email);
                     break;
@@ -26,30 +23,48 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 break;
                 
             case 'create_manual':
-                $ventaId = intval($_POST['venta_id']);
-                $venta = fetchOne("SELECT * FROM ventas WHERE id = ?", [$ventaId]);
+                $tipoTransaccion = $_POST['tipo_transaccion'];
+                $transaccionId = intval($_POST['transaccion_id']);
                 
-                if ($venta) {
-                    $numeroFactura = 'F' . str_pad($ventaId, 3, '0', STR_PAD_LEFT) . '-' . date('Y');
+                if ($tipoTransaccion === 'venta') {
+                    $transaccion = fetchOne("SELECT * FROM ventas WHERE id = ?", [$transaccionId]);
+                    $numeroFactura = 'F' . str_pad($transaccionId, 3, '0', STR_PAD_LEFT) . '-' . date('Y');
                     $facturaData = [
-                        'venta_id' => $ventaId,
+                        'venta_id' => $transaccionId,
+                        'compra_id' => NULL,
                         'numero_factura' => $numeroFactura,
                         'fecha_factura' => $_POST['fecha_factura'],
-                        'subtotal' => $venta['total'],
-                        'impuestos' => $venta['total'] * 0.19,
-                        'total' => $venta['total'] * 1.19,
+                        'subtotal' => $transaccion['total'],
+                        'impuestos' => $transaccion['total'] * 0.19,
+                        'total' => $transaccion['total'] * 1.19,
                         'estado_pago' => $_POST['estado_pago'],
                         'fecha_vencimiento' => $_POST['fecha_vencimiento'],
-                        'tipo_transaccion' => 'venta' // Añadimos este campo para identificar el tipo
+                        'tipo_transaccion' => 'venta'
                     ];
-                    
-                    if (insertRecord('facturas', $facturaData)) {
-                        $success = "Factura creada exitosamente";
-                    } else {
-                        $error = "Error al crear la factura";
-                    }
+                } else {
+                    $transaccion = fetchOne("SELECT * FROM compras WHERE id = ?", [$transaccionId]);
+                    $numeroFactura = 'FC' . str_pad($transaccionId, 3, '0', STR_PAD_LEFT) . '-' . date('Y');
+                    $facturaData = [
+                        'venta_id' => NULL,
+                        'compra_id' => $transaccionId,
+                        'numero_factura' => $numeroFactura,
+                        'fecha_factura' => $_POST['fecha_factura'],
+                        'subtotal' => $transaccion['total'],
+                        'impuestos' => 0,
+                        'total' => $transaccion['total'],
+                        'estado_pago' => $_POST['estado_pago'],
+                        'fecha_vencimiento' => $_POST['fecha_vencimiento'],
+                        'tipo_transaccion' => 'compra'
+                    ];
+                }
+                
+                if ($transaccion && insertRecord('facturas', $facturaData)) {
+                    $success = "Factura creada exitosamente";
+                } else {
+                    $error = "Error al crear la factura. Verifica los datos o consulta los logs.";
                 }
                 break;
+
                 
             case 'update_status':
                 $facturaId = intval($_POST['factura_id']);
@@ -112,10 +127,8 @@ $facturasCampesinos = fetchAll("
     ORDER BY f.fecha_factura DESC
 ");
 
-// Combinar ambas listas para estadísticas
 $facturas = array_merge($facturasCooperativas, $facturasCampesinos);
 
-// Obtener ventas sin factura para crear facturas manuales
 $ventasSinFactura = fetchAll("
     SELECT v.id, v.total, v.fecha_venta,
            COALESCE(c.nombre, v.cliente_nombre) as cliente_nombre,
@@ -126,6 +139,19 @@ $ventasSinFactura = fetchAll("
     LEFT JOIN facturas f ON v.id = f.venta_id
     WHERE f.id IS NULL AND v.estado = 'completada'
     ORDER BY v.fecha_venta DESC
+");
+
+
+$comprasSinFactura = fetchAll("
+    SELECT c.id, c.total, c.fecha_compra,
+           u.nombre as campesino_nombre,
+           tc.nombre as tipo_cafe
+    FROM compras c
+    JOIN usuarios u ON c.campesino_id = u.id
+    JOIN tipos_cafe tc ON c.tipo_cafe_id = tc.id
+    LEFT JOIN facturas f ON c.id = f.compra_id
+    WHERE f.id IS NULL AND c.estado = 'completada'
+    ORDER BY c.fecha_compra DESC
 ");
 
 // Estadísticas
@@ -458,13 +484,9 @@ $montoTotal = array_sum(array_column($facturas, 'total'));
                         </td>
                         <td><?php echo date('d/m/Y', strtotime($factura['fecha_factura'])); ?></td>
                         <td>
-                            <form method="POST" style="display: inline;">
-                                <input type="hidden" name="action" value="generate_pdf">
-                                <input type="hidden" name="factura_id" value="<?php echo $factura['id']; ?>">
-                                <button type="submit" class="btn" style="padding: 0.5rem;" title="Descargar PDF">
-                                    <i class="fas fa-file-pdf"></i>
-                                </button>
-                            </form>
+                            <a href="generate_pdf.php?factura_id=<?php echo $factura['id']; ?>" class="btn btn-primary" style="padding: 0.5rem;" title="Descargar PDF">
+                                <i class="fas fa-file-pdf"></i>
+                            </a>
                             
                             <button onclick="openEmailModal(<?php echo $factura['id']; ?>, '<?php echo htmlspecialchars($factura['campesino_email'] ?: $factura['cliente_email']); ?>')" 
                                     class="btn btn-info" style="padding: 0.5rem;" title="Enviar por Email">
@@ -541,14 +563,9 @@ $montoTotal = array_sum(array_column($facturas, 'total'));
                         </td>
                         <td><?php echo date('d/m/Y', strtotime($factura['fecha_factura'])); ?></td>
                         <td>
-
-                            <form method="POST" style="display: inline;">
-                                <input type="hidden" name="action" value="generate_pdf">
-                               
-                                <a href="generate_pdf.php?factura_id=<?php echo $factura['id']; ?>" class="btn btn-primary mt-5">
-                                    <i class="fas fa-download"></i>
-                                </a>
-                            </form>
+                            <a href="generate_pdf.php?factura_id=<?php echo $factura['id']; ?>" class="btn btn-primary" style="padding: 0.5rem;" title="Descargar PDF">
+                                <i class="fas fa-file-pdf"></i>
+                            </a>
                             
                             <button onclick="openEmailModal(<?php echo $factura['id']; ?>, '<?php echo htmlspecialchars($factura['cliente_email']); ?>')" 
                                     class="btn btn-info" style="padding: 0.5rem;" title="Enviar por Email">
@@ -588,20 +605,22 @@ $montoTotal = array_sum(array_column($facturas, 'total'));
     <h4 style="margin-bottom: 1.5rem; color: #8B4513;">
         <i class="fas fa-plus"></i> Crear Nueva Factura
     </h4>
-    <form method="POST">
+    <form method="POST" id="create-factura-form-inner">
         <input type="hidden" name="action" value="create_manual">
         
         <div class="form-group">
-            <label>Venta Asociada:</label>
-            <select name="venta_id" required>
-                <option value="">Seleccionar venta</option>
-                <?php foreach ($ventasSinFactura as $venta): ?>
-                    <option value="<?php echo $venta['id']; ?>">
-                        V<?php echo str_pad($venta['id'], 3, '0', STR_PAD_LEFT); ?> - 
-                        <?php echo htmlspecialchars($venta['cliente_nombre']); ?> - 
-                        $<?php echo number_format($venta['total'], 0, ',', '.'); ?>
-                    </option>
-                <?php endforeach; ?>
+            <label>Tipo de Transacción:</label>
+            <select name="tipo_transaccion" id="tipo_transaccion" required onchange="updateTransaccionOptions()">
+                <option value="">Seleccionar tipo</option>
+                <option value="venta">Venta (Cooperativa)</option>
+                <option value="compra">Compra (Campesino)</option>
+            </select>
+        </div>
+
+        <div class="form-group" id="transaccion_container">
+            <label id="transaccion_label">Transacción Asociada:</label>
+            <select name="transaccion_id" id="transaccion_id" required>
+                <option value="">Seleccionar transacción</option>
             </select>
         </div>
         
@@ -742,4 +761,33 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     });
 });
+
+const ventasSinFactura = <?php echo json_encode($ventasSinFactura); ?>;
+const comprasSinFactura = <?php echo json_encode($comprasSinFactura); ?>;
+
+function updateTransaccionOptions() {
+    const tipo = document.getElementById('tipo_transaccion').value;
+    const transaccionSelect = document.getElementById('transaccion_id');
+    const transaccionLabel = document.getElementById('transaccion_label');
+    
+    transaccionSelect.innerHTML = '<option value="">Seleccionar transacción</option>';
+    
+    if (tipo === 'venta') {
+        transaccionLabel.textContent = 'Venta Asociada:';
+        ventasSinFactura.forEach(venta => {
+            const option = document.createElement('option');
+            option.value = venta.id;
+            option.textContent = `V${String(venta.id).padStart(3, '0')} - ${venta.cliente_nombre} - $${parseInt(venta.total).toLocaleString('es-CO')}`;
+            transaccionSelect.appendChild(option);
+        });
+    } else if (tipo === 'compra') {
+        transaccionLabel.textContent = 'Compra Asociada:';
+        comprasSinFactura.forEach(compra => {
+            const option = document.createElement('option');
+            option.value = compra.id;
+            option.textContent = `C${String(compra.id).padStart(3, '0')} - ${compra.campesino_nombre} - $${parseInt(compra.total).toLocaleString('es-CO')}`;
+            transaccionSelect.appendChild(option);
+        });
+    }
+}
 </script>
