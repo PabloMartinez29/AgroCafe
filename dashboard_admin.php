@@ -1,19 +1,18 @@
 <?php
 session_start();
+require_once 'config/database.php'; 
 
 // Verificar si el usuario está logueado y es administrador
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'administrador') {
     header('Location: login.php');
     exit();
 }
-
-// Obtener la vista solicitada
 $view = isset($_GET['view']) ? $_GET['view'] : 'bienvenida';
-$allowed_views = ['bienvenida', 'usuarios', 'compras', 'ventas', 'pagos', 'facturas', 'tipos-cafe', 'cooperativas', 'analisis'];
-
+$allowed_views = ['bienvenida', 'usuarios', 'compras', 'ventas', 'pagos', 'facturas', 'tipos-cafe', 'cooperativas', 'analisis', 'caja'];
 if (!in_array($view, $allowed_views)) {
     $view = 'bienvenida';
 }
+ob_start();
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -22,6 +21,10 @@ if (!in_array($view, $allowed_views)) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AgroCafé - Administrador</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         * {
             margin: 0;
@@ -281,7 +284,7 @@ if (!in_array($view, $allowed_views)) {
     <div class="dashboard-container">
         <nav class="sidebar">
             <div class="sidebar-header">
-                <h2><i class="fas fa-coffee"></i> CaféTrade</h2>
+                <h2><i class="fas fa-coffee"></i> AgroCafé</h2>
                 <div class="user-info">
                     <i class="fas fa-user-shield"></i>
                     <?php echo $_SESSION['user_name']; ?>
@@ -293,6 +296,9 @@ if (!in_array($view, $allowed_views)) {
                 </a>
                 <a href="?view=usuarios" class="menu-item <?php echo $view == 'usuarios' ? 'active' : ''; ?>">
                     <i class="fas fa-users"></i> Usuarios
+                </a>
+                <a href="?view=caja" class="menu-item <?php echo $view == 'caja' ? 'active' : ''; ?>">
+                    <i class="fas fa-cash-register"></i> Gestión de Caja
                 </a>
                 <a href="?view=compras" class="menu-item <?php echo $view == 'compras' ? 'active' : ''; ?>">
                     <i class="fas fa-shopping-cart"></i> Compras
@@ -313,7 +319,7 @@ if (!in_array($view, $allowed_views)) {
                     <i class="fas fa-building"></i> Cooperativas
                 </a>
                 <a href="?view=analisis" class="menu-item <?php echo $view == 'analisis' ? 'active' : ''; ?>">
-                    <i class="fas fa-chart-line"></i> Análisis de Precios
+                    <i class="fas fa-chart-line"></i> Análisis de Ventas
                 </a>
             </div>
         </nav>
@@ -331,7 +337,8 @@ if (!in_array($view, $allowed_views)) {
                         'facturas' => 'Gestión de Facturas',
                         'tipos-cafe' => 'Tipos de Café',
                         'cooperativas' => 'Cooperativas',
-                        'analisis' => 'Análisis de Precios'
+                        'analisis' => 'Análisis de ventas',
+                        'caja' => 'Gestión de Caja'
                     ];
                     echo $titles[$view];
                     ?>
@@ -345,7 +352,7 @@ if (!in_array($view, $allowed_views)) {
             <div class="content-area">
                 <?php 
                 $viewFile = "views/admin/{$view}.php";
-                // Manejar casos especiales de nombres de archivo
+ 
                 if ($view === 'tipos-cafe') {
                     $viewFile = "views/admin/tipos_cafe.php";
                 }

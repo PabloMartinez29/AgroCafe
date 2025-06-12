@@ -11,7 +11,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     'variedad' => $_POST['variedad'],
                     'descripcion' => trim($_POST['descripcion']),
                     'precio_base' => floatval($_POST['precio_base']),
-                    'calidad' => $_POST['calidad']
+                    'calidad' => $_POST['calidad'],
+                    'tipo_procesamiento' => $_POST['tipo_procesamiento'] // NUEVO CAMPO
                 ];
                 
                 if (insertRecord('tipos_cafe', $data)) {
@@ -28,7 +29,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     'variedad' => $_POST['variedad'],
                     'descripcion' => trim($_POST['descripcion']),
                     'precio_base' => floatval($_POST['precio_base']),
-                    'calidad' => $_POST['calidad']
+                    'calidad' => $_POST['calidad'],
+                    'tipo_procesamiento' => $_POST['tipo_procesamiento'] // NUEVO CAMPO
                 ];
                 
                 if (updateRecord('tipos_cafe', $data, 'id = ?', [$id])) {
@@ -37,32 +39,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $error = "Error al actualizar el tipo de café";
                 }
                 break;
-                
+
             case 'delete':
                 $id = intval($_POST['id']);
                 
-                // Verificar si el tipo de café tiene compras o ventas asociadas
-                $hasCompras = fetchOne("SELECT COUNT(*) as total FROM compras WHERE tipo_cafe_id = ?", [$id]);
-                $hasVentas = fetchOne("SELECT COUNT(*) as total FROM ventas WHERE tipo_cafe_id = ?", [$id]);
-                
-                if ($hasCompras['total'] > 0 || $hasVentas['total'] > 0) {
-                    $error = "No se puede eliminar el tipo de café porque tiene transacciones asociadas";
+                $sql = "DELETE FROM tipos_cafe WHERE id = ?";
+                if (executeQuery($sql, [$id])) {
+                    $success = "Tipo de café eliminado exitosamente";
                 } else {
-                    // Eliminar físicamente de la base de datos
-                    $sql = "DELETE FROM tipos_cafe WHERE id = ?";
-                    if (executeQuery($sql, [$id])) {
-                        $success = "Tipo de café eliminado exitosamente";
-                    } else {
-                        $error = "Error al eliminar el tipo de café";
-                    }
+                    $error = "Error al eliminar el tipo de café";
                 }
                 break;
         }
     }
 }
 
-// Obtener tipos de café
-$tiposCafe = fetchAll("SELECT * FROM tipos_cafe ORDER BY nombre");
+// Obtener tipos de café ordenados por tipo de procesamiento
+$tiposCafe = fetchAll("SELECT * FROM tipos_cafe ORDER BY tipo_procesamiento, nombre");
 
 // Obtener tipo específico para editar
 $editTipo = null;
@@ -167,6 +160,12 @@ if (isset($_GET['edit'])) {
         gap: 1rem;
     }
 
+    .form-row-three {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 1rem;
+    }
+
     .alert {
         padding: 1rem;
         border-radius: 5px;
@@ -226,6 +225,35 @@ if (isset($_GET['edit'])) {
         color: white;
     }
 
+    /* NUEVOS ESTILOS PARA TIPO DE PROCESAMIENTO */
+    .processing-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+
+    .processing-normal {
+        background: #007bff;
+        color: white;
+    }
+
+    .processing-mojado {
+        background: #17a2b8;
+        color: white;
+    }
+
+    .processing-seco {
+        background: #fd7e14;
+        color: white;
+    }
+
+    .processing-pasilla {
+        background: #6f42c1;
+        color: white;
+    }
+
     .form-container {
         background: #f8f9fa;
         padding: 2rem;
@@ -235,7 +263,7 @@ if (isset($_GET['edit'])) {
     }
 
     @media (max-width: 768px) {
-        .form-row {
+        .form-row, .form-row-three {
             grid-template-columns: 1fr;
         }
         
@@ -284,8 +312,21 @@ if (isset($_GET['edit'])) {
                 <label><i class="fas fa-coffee"></i> Nombre del Café:</label>
                 <input type="text" name="nombre" required 
                        value="<?php echo $editTipo ? htmlspecialchars($editTipo['nombre']) : ''; ?>"
-                       placeholder="Ej: Café Supremo, Café Especial...">
+                       placeholder="Ej: Café Supremo, Café Especial, Pasilla Premium...">
             </div>
+            <div class="form-group">
+                <label><i class="fas fa-cogs"></i> Tipo de Procesamiento:</label>
+                <select name="tipo_procesamiento" required>
+                    <option value="">Seleccionar procesamiento</option>
+                    <option value="normal" <?php echo ($editTipo && $editTipo['tipo_procesamiento'] == 'normal') ? 'selected' : ''; ?>>Normal</option>
+                    <option value="mojado" <?php echo ($editTipo && $editTipo['tipo_procesamiento'] == 'mojado') ? 'selected' : ''; ?>>Mojado</option>
+                    <option value="seco" <?php echo ($editTipo && $editTipo['tipo_procesamiento'] == 'seco') ? 'selected' : ''; ?>>Seco</option>
+                    <option value="pasilla" <?php echo ($editTipo && $editTipo['tipo_procesamiento'] == 'pasilla') ? 'selected' : ''; ?>>Pasilla</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="form-row">
             <div class="form-group">
                 <label><i class="fas fa-leaf"></i> Variedad:</label>
                 <select name="variedad" required>
@@ -293,21 +334,6 @@ if (isset($_GET['edit'])) {
                     <option value="arabica" <?php echo ($editTipo && $editTipo['variedad'] == 'arabica') ? 'selected' : ''; ?>>Arábica</option>
                     <option value="robusta" <?php echo ($editTipo && $editTipo['variedad'] == 'robusta') ? 'selected' : ''; ?>>Robusta</option>
                 </select>
-            </div>
-        </div>
-        
-        <div class="form-group">
-            <label><i class="fas fa-align-left"></i> Descripción:</label>
-            <textarea name="descripcion" rows="3" 
-                      placeholder="Describe las características del café, su origen, sabor, aroma, etc."><?php echo $editTipo ? htmlspecialchars($editTipo['descripcion']) : ''; ?></textarea>
-        </div>
-        
-        <div class="form-row">
-            <div class="form-group">
-                <label><i class="fas fa-dollar-sign"></i> Precio Base (por kg):</label>
-                <input type="number" name="precio_base" step="0.01" required 
-                       value="<?php echo $editTipo ? $editTipo['precio_base'] : ''; ?>"
-                       placeholder="Ej: 12000.00">
             </div>
             <div class="form-group">
                 <label><i class="fas fa-star"></i> Calidad:</label>
@@ -318,6 +344,19 @@ if (isset($_GET['edit'])) {
                     <option value="comercial" <?php echo ($editTipo && $editTipo['calidad'] == 'comercial') ? 'selected' : ''; ?>>Comercial</option>
                 </select>
             </div>
+        </div>
+        
+        <div class="form-group">
+            <label><i class="fas fa-align-left"></i> Descripción:</label>
+            <textarea name="descripcion" rows="3" 
+                      placeholder="Describe las características del café, su origen, sabor, aroma, tipo de procesamiento, etc."><?php echo $editTipo ? htmlspecialchars($editTipo['descripcion']) : ''; ?></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label><i class="fas fa-dollar-sign"></i> Precio Base (por kg):</label>
+            <input type="number" name="precio_base" step="0.01" required 
+                   value="<?php echo $editTipo ? $editTipo['precio_base'] : ''; ?>"
+                   placeholder="Ej: 12000.00">
         </div>
         
         <div style="margin-top: 2rem;">
@@ -337,6 +376,7 @@ if (isset($_GET['edit'])) {
             <tr>
                 <th>ID</th>
                 <th>Nombre</th>
+                <th>Procesamiento</th>
                 <th>Variedad</th>
                 <th>Descripción</th>
                 <th>Precio Base</th>
@@ -352,6 +392,11 @@ if (isset($_GET['edit'])) {
                         <td><strong>TC<?php echo str_pad($tipo['id'], 3, '0', STR_PAD_LEFT); ?></strong></td>
                         <td><?php echo htmlspecialchars($tipo['nombre']); ?></td>
                         <td>
+                            <span class="processing-badge processing-<?php echo $tipo['tipo_procesamiento'] ?? 'normal'; ?>">
+                                <?php echo ucfirst($tipo['tipo_procesamiento'] ?? 'Normal'); ?>
+                            </span>
+                        </td>
+                        <td>
                             <span class="variety-badge variety-<?php echo $tipo['variedad']; ?>">
                                 <?php echo ucfirst($tipo['variedad']); ?>
                             </span>
@@ -359,7 +404,7 @@ if (isset($_GET['edit'])) {
                         <td>
                             <?php 
                             $descripcion = htmlspecialchars($tipo['descripcion']);
-                            echo strlen($descripcion) > 50 ? substr($descripcion, 0, 50) . '...' : $descripcion; 
+                            echo strlen($descripcion) > 40 ? substr($descripcion, 0, 40) . '...' : $descripcion; 
                             ?>
                         </td>
                         <td><strong>$<?php echo number_format($tipo['precio_base'], 0, ',', '.'); ?></strong></td>
@@ -388,7 +433,7 @@ if (isset($_GET['edit'])) {
                 <?php endforeach; ?>
             <?php else: ?>
                 <tr>
-                    <td colspan="8" style="text-align: center; padding: 3rem; color: #666;">
+                    <td colspan="9" style="text-align: center; padding: 3rem; color: #666;">
                         <i class="fas fa-coffee" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
                         <br>No hay tipos de café registrados
                         <br><small>Haz clic en "Nuevo Tipo" para agregar el primer tipo de café</small>
@@ -407,7 +452,6 @@ function showCoffeeForm() {
 
 function hideCoffeeForm() {
     document.getElementById('coffee-form').style.display = 'none';
-    // Limpiar URL si estamos editando
     if (window.location.href.includes('edit=')) {
         window.location.href = '?view=tipos-cafe';
     }
@@ -424,4 +468,3 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-

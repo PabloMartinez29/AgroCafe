@@ -1,1 +1,0 @@
-ALTER TABLE aprendices AUTO_INCREMENT=1

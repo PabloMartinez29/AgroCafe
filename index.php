@@ -1,3 +1,51 @@
+<?php
+require_once 'config/database.php';
+
+// Manejo del endpoint refresh
+if (isset($_GET['view']) && $_GET['view'] === 'ventas' && isset($_GET['action']) && $_GET['action'] === 'refresh') {
+    $hoy = date('Y-m-d');
+    $kilos_comprados = fetchOne("SELECT COALESCE(SUM(cantidad), 0) as total FROM compras WHERE estado = 'completada'")['total'] ?? 0;
+    $kilos_vendidos = fetchOne("SELECT COALESCE(SUM(cantidad), 0) as total FROM ventas WHERE estado = 'completada'")['total'] ?? 0;
+    $kilos_disponibles = $kilos_comprados - $kilos_vendidos;
+    
+    $valor_invertido_dia = fetchOne("SELECT COALESCE(SUM(cantidad * precio_kg), 0) as total FROM compras WHERE estado = 'completada' AND DATE(fecha_compra) = ?", [$hoy])['total'] ?? 0;
+    $saldo_recuperado_dia = fetchOne("SELECT COALESCE(SUM(cantidad * precio_kg), 0) as total FROM ventas WHERE estado = 'completada' AND DATE(fecha_venta) = ?", [$hoy])['total'] ?? 0;
+    $recuperado_dia = min($valor_invertido_dia, $saldo_recuperado_dia);
+    $ganancias_dia = max(0, $saldo_recuperado_dia - $valor_invertido_dia);
+    $margen_ganancias_dia = ($valor_invertido_dia > 0) ? (($ganancias_dia / $valor_invertido_dia) * 100) : 0;
+    $kilos_vendidos_dia = fetchOne("SELECT COALESCE(SUM(cantidad), 0) as total FROM ventas WHERE estado = 'completada' AND DATE(fecha_venta) = ?", [$hoy])['total'] ?? 0;
+
+    header('Content-Type: application/json');
+    echo json_encode([
+        'kilos_disponibles' => $kilos_disponibles,
+        'valor_invertido_dia' => $valor_invertido_dia,
+        'recuperado_dia' => $recuperado_dia,
+        'ganancias_dia' => $ganancias_dia,
+        'margen_ganancias_dia' => $margen_ganancias_dia,
+        'kilos_vendidos_dia' => $kilos_vendidos_dia
+    ]);
+    exit;
+}
+
+// Lógica para incluir las vistas desde views/admin/
+if (isset($_GET['view'])) {
+    $view = $_GET['view'];
+    $file = "views/admin/{$view}.php";
+    if (file_exists($file)) {
+        include $file;
+    } else {
+        echo "Vista no encontrada: $file";
+    }
+} else {
+    $default_view = 'home';
+    $file = "views/admin/{$default_view}.php";
+    if (file_exists($file)) {
+        include $file;
+    } else {
+        echo "";
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -298,7 +346,7 @@
             <h1>Bienvenido a AgroCafé</h1>
             <p>La plataforma líder para la compra y venta de café de alta calidad. Conectamos productores con compradores de manera eficiente y transparente.</p>
             <div class="nav-buttons">
-                <a href="#http://127.0.0.1/Agrocafe1/register.php" class="btn btn-primary" onclick="openModal('registerModal')">
+                <a href="http://127.0.0.1/Agrocafe1/register.php" class="btn btn-primary">
                     <i class="fas fa-rocket"></i>
                     Comenzar Ahora
                 </a>

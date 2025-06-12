@@ -490,7 +490,6 @@ $comprasPendientes = fetchAll("
                         <option value="">Seleccionar método</option>
                         <option value="transferencia">Transferencia Bancaria</option>
                         <option value="efectivo">Efectivo</option>
-                        <option value="cheque">Cheque</option>
                     </select>
                 </div>
             </div>

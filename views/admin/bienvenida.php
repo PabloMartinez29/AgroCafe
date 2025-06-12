@@ -21,7 +21,7 @@ $ingresosQuery = "SELECT SUM(total) as ingresos FROM ventas WHERE estado = 'comp
 $ingresos = fetchOne($ingresosQuery)['ingresos'];
 $stats['ingresos'] = $ingresos ? number_format($ingresos, 0, ',', '.') : '0';
 
-// Obtener noticias recientes (últimas compras/ventas como noticias)
+// Obtener noticias recientes//
 $noticiasQuery = "
     SELECT 'compra' as tipo, c.fecha_compra as fecha, u.nombre as campesino, tc.nombre as cafe, c.total
     FROM compras c 
@@ -99,7 +99,7 @@ $noticias = fetchAll($noticiasQuery);
 
 <div class="welcome-message">
     <h3 style="color: #28a745; margin-bottom: 0.5rem;">
-        <i class="fas fa-coffee"></i> ¡Bienvenido al Sistema CaféTrade!
+        <i class="fa-solid fa-mug-saucer"></i> ¡Bienvenido al Sistema AgroCafé!
     </h3>
     <p style="margin: 0; color: #666;">
         Gestiona eficientemente las compras, ventas y análisis de precios del café. 
@@ -151,7 +151,7 @@ $noticias = fetchAll($noticiasQuery);
     <div class="news-item">
         <h4><i class="fas fa-info-circle"></i> Sistema Iniciado</h4>
         <div class="date"><?php echo date('d/m/Y'); ?></div>
-        <p>El sistema CaféTrade está funcionando correctamente. Comienza registrando compras y ventas para ver la actividad aquí.</p>
+        <p>El sistema AgroCafé está funcionando correctamente. Comienza registrando compras y ventas para ver la actividad aquí.</p>
     </div>
 <?php endif; ?>
 

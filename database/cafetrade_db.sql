@@ -116,79 +116,6 @@ CREATE TABLE precios_historicos (
 -- Usuarios administrador y campesinos
 INSERT INTO usuarios (nombre, email, password, telefono, direccion, rol) VALUES
 ('Administrador Sistema', 'admin@cafetrade.com', 'admin123', '+57 1 234 5678', 'Oficina Central Bogotá', 'administrador'),
-('Juan Pérez', 'campesino@cafetrade.com', 'campesino123', '+57 300 123 4567', 'Finca La Esperanza, Huila', 'campesino'),
-('María González', 'maria@email.com', 'maria123', '+57 301 234 5678', 'Finca El Paraíso, Nariño', 'campesino'),
-('Carlos Rodríguez', 'carlos@email.com', 'carlos123', '+57 302 345 6789', 'Finca Los Andes, Cauca', 'campesino'),
-('Ana Martínez', 'ana@email.com', 'ana123', '+57 303 456 7890', 'Finca San José, Tolima', 'campesino');
-
--- Tipos de café
-INSERT INTO tipos_cafe (nombre, variedad, descripcion, precio_base, calidad) VALUES
-('Café Supremo', 'arabica', 'Café de alta montaña con notas frutales y acidez balanceada', 12000.00, 'premium'),
-('Café Especial', 'arabica', 'Café de calidad especial con proceso lavado', 10500.00, 'especial'),
-('Café Tradicional', 'robusta', 'Café comercial de buena calidad para consumo masivo', 8500.00, 'comercial'),
-('Café Orgánico', 'arabica', 'Café certificado orgánico de montaña', 13500.00, 'premium'),
-('Café Excelso', 'arabica', 'Café de exportación con certificación de calidad', 11000.00, 'especial');
-
--- Cooperativas
-INSERT INTO cooperativas (nombre, nit, telefono, email, direccion, representante_legal) VALUES
-('Cooperativa San José', '900123456-1', '+57 1 234 5678', 'info@coopsanjose.com', 'Calle 10 #15-20, Bogotá', 'Carlos Rodríguez'),
-('Exportadora Colombia', '900654321-2', '+57 1 987 6543', 'ventas@exportcol.com', 'Carrera 7 #32-45, Bogotá', 'Ana Martínez'),
-('Tostadora Local', '900789123-3', '+57 1 555 0123', 'compras@tostadora.com', 'Avenida 19 #25-30, Medellín', 'Luis García'),
-('Café Internacional', '900456789-4', '+57 1 777 8888', 'internacional@cafe.com', 'Zona Franca, Cartagena', 'Patricia López');
-
--- Compras (admin compra a campesinos)
-INSERT INTO compras (campesino_id, tipo_cafe_id, cantidad, precio_kg, fecha_compra, estado) VALUES
-(2, 1, 150.00, 12000.00, '2024-05-20', 'completada'),
-(3, 2, 200.00, 10500.00, '2024-05-18', 'completada'),
-(4, 3, 100.00, 8500.00, '2024-05-15', 'pendiente'),
-(5, 4, 80.00, 13500.00, '2024-05-22', 'completada'),
-(2, 5, 120.00, 11000.00, '2024-05-25', 'completada');
-
--- Ventas (admin vende a cooperativas)
-INSERT INTO ventas (cooperativa_id, tipo_cafe_id, cantidad, precio_kg, fecha_venta, estado) VALUES
-(1, 1, 200.00, 15000.00, '2024-05-22', 'completada'),
-(2, 2, 180.00, 13000.00, '2024-05-20', 'completada'),
-(3, 3, 100.00, 10000.00, '2024-05-18', 'pendiente'),
-(4, 4, 90.00, 16000.00, '2024-05-25', 'completada'),
-(1, 5, 150.00, 14000.00, '2024-05-27', 'completada');
-
--- Pagos
-INSERT INTO pagos (venta_id, monto, metodo_pago, referencia, fecha_pago, estado) VALUES
-(1, 3000000.00, 'transferencia', 'TRF-2024-001', '2024-05-23', 'completado'),
-(2, 2340000.00, 'transferencia', 'TRF-2024-002', '2024-05-21', 'completado'),
-(4, 1440000.00, 'transferencia', 'TRF-2024-003', '2024-05-26', 'completado'),
-(5, 2100000.00, 'transferencia', 'TRF-2024-004', '2024-05-28', 'completado');
-
--- Facturas
-INSERT INTO facturas (venta_id, numero_factura, fecha_factura, subtotal, impuestos, total, estado_pago, fecha_vencimiento) VALUES
-(1, 'F001', '2024-05-22', 3000000.00, 570000.00, 3570000.00, 'pagada', '2024-06-22'),
-(2, 'F002', '2024-05-20', 2340000.00, 444600.00, 2784600.00, 'pagada', '2024-06-20'),
-(3, 'F003', '2024-05-18', 1000000.00, 190000.00, 1190000.00, 'pendiente', '2024-06-18'),
-(4, 'F004', '2024-05-25', 1440000.00, 273600.00, 1713600.00, 'pagada', '2024-06-25'),
-(5, 'F005', '2024-05-27', 2100000.00, 399000.00, 2499000.00, 'pagada', '2024-06-27');
-
--- Precios históricos para análisis
-INSERT INTO precios_historicos (tipo_cafe_id, precio, fecha_precio, tipo_operacion) VALUES
--- Enero 2024
-(1, 11500.00, '2024-01-15', 'compra'), (1, 14500.00, '2024-01-15', 'venta'),
-(2, 10000.00, '2024-01-15', 'compra'), (2, 12500.00, '2024-01-15', 'venta'),
-(3, 8000.00, '2024-01-15', 'compra'), (3, 9500.00, '2024-01-15', 'venta'),
--- Febrero 2024
-(1, 11800.00, '2024-02-15', 'compra'), (1, 14800.00, '2024-02-15', 'venta'),
-(2, 10200.00, '2024-02-15', 'compra'), (2, 12700.00, '2024-02-15', 'venta'),
-(3, 8200.00, '2024-02-15', 'compra'), (3, 9700.00, '2024-02-15', 'venta'),
--- Marzo 2024
-(1, 12000.00, '2024-03-15', 'compra'), (1, 15000.00, '2024-03-15', 'venta'),
-(2, 10500.00, '2024-03-15', 'compra'), (2, 13000.00, '2024-03-15', 'venta'),
-(3, 8500.00, '2024-03-15', 'compra'), (3, 10000.00, '2024-03-15', 'venta'),
--- Abril 2024
-(1, 12200.00, '2024-04-15', 'compra'), (1, 15200.00, '2024-04-15', 'venta'),
-(2, 10700.00, '2024-04-15', 'compra'), (2, 13200.00, '2024-04-15', 'venta'),
-(3, 8700.00, '2024-04-15', 'compra'), (3, 10200.00, '2024-04-15', 'venta'),
--- Mayo 2024 (actual)
-(1, 12000.00, '2024-05-15', 'compra'), (1, 15000.00, '2024-05-15', 'venta'),
-(2, 10500.00, '2024-05-15', 'compra'), (2, 13000.00, '2024-05-15', 'venta'),
-(3, 8500.00, '2024-05-15', 'compra'), (3, 10000.00, '2024-05-15', 'venta');
 
 -- Crear índices para optimizar consultas
 CREATE INDEX idx_usuarios_email ON usuarios(email);
@@ -201,7 +128,6 @@ CREATE INDEX idx_pagos_venta ON pagos(venta_id);
 CREATE INDEX idx_facturas_venta ON facturas(venta_id);
 CREATE INDEX idx_precios_fecha ON precios_historicos(fecha_precio);
 
--- Crear vistas para consultas frecuentes
 
 -- Vista de ventas con detalles
 CREATE VIEW vista_ventas_detalle AS
