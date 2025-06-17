@@ -1,27 +1,11 @@
 <?php
-require_once 'config/database.php';
-require_once 'lib/email_sender.php';
+// 🔧 SOLUCIÓN 1: Rutas absolutas desde la raíz del proyecto
+require_once $_SERVER['DOCUMENT_ROOT'] . '/Agrocafe1/config/database.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/Agrocafe1/lib/email_sender.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['action'])) {
         switch ($_POST['action']) {
-            case 'send_email':
-                $facturaId = intval($_POST['factura_id']);
-                $email = trim($_POST['email']);
-                
-                if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                    $error = "La dirección de correo electrónico no es válida: " . htmlspecialchars($email);
-                    break;
-                }
-                
-                $emailSender = new EmailSender();
-                if ($emailSender->enviarFactura($facturaId, $email)) {
-                    $success = "Factura enviada por email exitosamente a: " . htmlspecialchars($email);
-                } else {
-                    $error = "Error al enviar la factura por email. Revisa los logs para más detalles.";
-                }
-                break;
-                
             case 'create_manual':
                 $tipoTransaccion = $_POST['tipo_transaccion'];
                 $transaccionId = intval($_POST['transaccion_id']);
@@ -60,6 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 
                 if ($transaccion && insertRecord('facturas', $facturaData)) {
                     $success = "Factura creada exitosamente";
+                    $showSuccessModal = true;
                 } else {
                     $error = "Error al crear la factura. Verifica los datos o consulta los logs.";
                 }
@@ -71,7 +56,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $nuevoEstado = $_POST['nuevo_estado'];
                 
                 if (updateRecord('facturas', ['estado_pago' => $nuevoEstado], 'id = ?', [$facturaId])) {
-                    $success = "Estado de factura actualizado exitosamente";
+                    $success = "Estado de factura actualizado exitosamente a: " . ucfirst($nuevoEstado);
+                    $showSuccessModal = true;
                 } else {
                     $error = "Error al actualizar el estado de la factura";
                 }
@@ -82,6 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $sql = "DELETE FROM facturas WHERE id = ?";
                 if (executeQuery($sql, [$facturaId])) {
                     $success = "Factura eliminada exitosamente";
+                    $showSuccessModal = true;
                 } else {
                     $error = "Error al eliminar la factura";
                 }
@@ -404,13 +391,88 @@ $montoTotal = array_sum(array_column($facturas, 'total'));
         align-items: center;
         gap: 0.5rem;
     }
-</style>
 
-<?php if (isset($success)): ?>
-    <div class="alert alert-success">
-        <i class="fas fa-check-circle"></i> <?php echo $success; ?>
-    </div>
-<?php endif; ?>
+    .success-modal {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+        text-align: center;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .success-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        animation: bounce 1s ease-in-out;
+    }
+
+    @keyframes bounce {
+        0%, 20%, 60%, 100% { transform: translateY(0); }
+        40% { transform: translateY(-20px); }
+        80% { transform: translateY(-10px); }
+    }
+
+    .success-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .success-btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .success-btn-primary {
+        background: white;
+        color: #28a745;
+    }
+
+    .success-btn-primary:hover {
+        background: #f8f9fa;
+        transform: translateY(-2px);
+    }
+
+    .success-btn-secondary {
+        background: rgba(255,255,255,0.2);
+        color: white;
+        border: 2px solid white;
+    }
+
+    .success-btn-secondary:hover {
+        background: rgba(255,255,255,0.3);
+        transform: translateY(-2px);
+    }
+
+    .loading {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+
+    .spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(255,255,255,.3);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+</style>
 
 <?php if (isset($error)): ?>
     <div class="alert alert-error">
@@ -662,8 +724,7 @@ $montoTotal = array_sum(array_column($facturas, 'total'));
         <h3 style="color: #8B4513; margin-bottom: 1rem;">
             <i class="fas fa-envelope"></i> Enviar Factura por Email
         </h3>
-        <form method="POST">
-            <input type="hidden" name="action" value="send_email">
+        <form id="emailForm">
             <input type="hidden" name="factura_id" id="modal_factura_id">
             
             <div class="form-group">
@@ -671,7 +732,7 @@ $montoTotal = array_sum(array_column($facturas, 'total'));
                 <input type="email" name="email" id="modal_email" required>
             </div>
             
-            <button type="submit" class="btn btn-success">
+            <button type="submit" class="btn btn-success" id="sendEmailBtn">
                 <i class="fas fa-paper-plane"></i> Enviar
             </button>
             <button type="button" class="btn" onclick="closeEmailModal()">
@@ -711,6 +772,26 @@ $montoTotal = array_sum(array_column($facturas, 'total'));
     </div>
 </div>
 
+<!-- Modal de éxito -->
+<div id="successModal" class="modal">
+    <div class="modal-content success-modal">
+        <span class="close" onclick="closeSuccessModal()" style="color: white;">×</span>
+        <div class="success-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <h2 style="margin-bottom: 1rem;">¡Operación Exitosa!</h2>
+        <p id="successMessage" style="font-size: 1.1rem; margin-bottom: 2rem;"></p>
+        <div class="success-buttons">
+            <button onclick="closeSuccessModal()" class="success-btn success-btn-primary">
+                <i class="fas fa-check"></i> Entendido
+            </button>
+            <button onclick="window.location.reload()" class="success-btn success-btn-secondary">
+                <i class="fas fa-sync"></i> Actualizar Página
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
 function showCreateFacturaForm() {
     document.getElementById('create-factura-form').style.display = 'block';
@@ -741,18 +822,80 @@ function closeStatusModal() {
     document.getElementById('statusModal').style.display = 'none';
 }
 
+function showSuccessModal(message) {
+    document.getElementById('successMessage').textContent = message;
+    document.getElementById('successModal').style.display = 'block';
+}
+
+function closeSuccessModal() {
+    document.getElementById('successModal').style.display = 'none';
+}
+
+// 🔧 AJAX con ruta absoluta
+document.getElementById('emailForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const sendBtn = document.getElementById('sendEmailBtn');
+    const originalText = sendBtn.innerHTML;
+    
+    // Mostrar loading
+    sendBtn.innerHTML = '<span class="spinner"></span> Enviando...';
+    sendBtn.disabled = true;
+    
+    // 🔧 RUTA ABSOLUTA
+    fetch('/Agrocafe1/send_email_ajax.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Restaurar botón
+        sendBtn.innerHTML = originalText;
+        sendBtn.disabled = false;
+        
+        // Cerrar modal de email
+        closeEmailModal();
+        
+        // Mostrar resultado
+        if (data.success) {
+            showSuccessModal(data.message);
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        // Restaurar botón
+        sendBtn.innerHTML = originalText;
+        sendBtn.disabled = false;
+        
+        console.error('Error:', error);
+        alert('Error al enviar el email. Inténtalo de nuevo.');
+    });
+});
+
 window.onclick = function(event) {
     const emailModal = document.getElementById('emailModal');
     const statusModal = document.getElementById('statusModal');
+    const successModal = document.getElementById('successModal');
+    
     if (event.target == emailModal) {
         emailModal.style.display = 'none';
     }
     if (event.target == statusModal) {
         statusModal.style.display = 'none';
     }
+    if (event.target == successModal) {
+        closeSuccessModal();
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Mostrar modal de éxito si hay mensaje
+    <?php if (isset($showSuccessModal) && $showSuccessModal && isset($success)): ?>
+        showSuccessModal('<?php echo addslashes($success); ?>');
+    <?php endif; ?>
+    
     const alerts = document.querySelectorAll('.alert');
     alerts.forEach(alert => {
         setTimeout(() => {

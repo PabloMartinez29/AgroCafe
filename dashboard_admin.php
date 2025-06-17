@@ -7,11 +7,16 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'administrador') 
     header('Location: login.php');
     exit();
 }
+
 $view = isset($_GET['view']) ? $_GET['view'] : 'bienvenida';
-$allowed_views = ['bienvenida', 'usuarios', 'compras', 'ventas', 'pagos', 'facturas', 'tipos-cafe', 'cooperativas', 'analisis', 'caja'];
+
+// CORRECCIÓN 1: Arreglar el typo y agregar estado-general correctamente
+$allowed_views = ['bienvenida', 'usuarios', 'compras', 'ventas', 'pagos', 'facturas', 'tipos-cafe', 'cooperativas', 'analisis', 'caja', 'bodega', 'estado-general'];
+
 if (!in_array($view, $allowed_views)) {
     $view = 'bienvenida';
 }
+
 ob_start();
 ?>
 <!DOCTYPE html>
@@ -22,7 +27,6 @@ ob_start();
     <title>AgroCafé - Administrador</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -303,8 +307,15 @@ ob_start();
                 <a href="?view=compras" class="menu-item <?php echo $view == 'compras' ? 'active' : ''; ?>">
                     <i class="fas fa-shopping-cart"></i> Compras
                 </a>
+                <a href="?view=bodega" class="menu-item <?php echo $view == 'bodega' ? 'active' : ''; ?>">
+                    <i class="fas fa-warehouse"></i> Bodega
+                </a>
                 <a href="?view=ventas" class="menu-item <?php echo $view == 'ventas' ? 'active' : ''; ?>">
                     <i class="fas fa-handshake"></i> Ventas
+                </a>
+                <!-- CORRECCIÓN 2: Arreglar el enlace de Estado General -->
+                <a href="?view=estado-general" class="menu-item <?php echo $view == 'estado-general' ? 'active' : ''; ?>">
+                    <i class="fas fa-tachometer-alt"></i> Estado General
                 </a>
                 <a href="?view=pagos" class="menu-item <?php echo $view == 'pagos' ? 'active' : ''; ?>">
                     <i class="fas fa-credit-card"></i> Pagos
@@ -332,13 +343,15 @@ ob_start();
                         'bienvenida' => 'Bienvenida',
                         'usuarios' => 'Gestión de Usuarios',
                         'compras' => 'Gestión de Compras',
+                        'bodega' => 'Gestión de Bodega',
                         'ventas' => 'Gestión de Ventas',
                         'pagos' => 'Gestión de Pagos',
                         'facturas' => 'Gestión de Facturas',
                         'tipos-cafe' => 'Tipos de Café',
                         'cooperativas' => 'Cooperativas',
                         'analisis' => 'Análisis de ventas',
-                        'caja' => 'Gestión de Caja'
+                        'caja' => 'Gestión de Caja',
+                        'estado-general' => 'Estado General'
                     ];
                     echo $titles[$view];
                     ?>
@@ -351,10 +364,14 @@ ob_start();
 
             <div class="content-area">
                 <?php 
+                // CORRECCIÓN 3: Mejorar la lógica de carga de archivos
                 $viewFile = "views/admin/{$view}.php";
  
+                // Casos especiales para nombres de archivo
                 if ($view === 'tipos-cafe') {
                     $viewFile = "views/admin/tipos_cafe.php";
+                } elseif ($view === 'estado-general') {
+                    $viewFile = "views/admin/estado_general.php";
                 }
 
                 if (file_exists($viewFile)) {
@@ -363,7 +380,9 @@ ob_start();
                     echo '<div style="text-align: center; padding: 3rem; color: #666;">
                         <i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 1rem; color: #dc3545;"></i>
                         <h3>Vista no encontrada</h3>
-                        <p>La vista solicitada no existe o no se puede cargar.</p>
+                        <p>La vista solicitada no existe: ' . htmlspecialchars($viewFile) . '</p>
+                        <p>Asegúrate de que el archivo existe en la ruta correcta.</p>
+                        <small>Vista actual: ' . htmlspecialchars($view) . '</small>
                     </div>';
                 }
                 ?>

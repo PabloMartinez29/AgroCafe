@@ -1,10 +1,8 @@
 <?php
 require_once 'config/database.php';
 
-
 $tipoFiltro = isset($_GET['tipo']) ? $_GET['tipo'] : '';
 $periodoFiltro = isset($_GET['periodo']) ? $_GET['periodo'] : 'mensual';
-
 
 $whereClause = "WHERE 1=1";
 $params = [];
@@ -14,7 +12,7 @@ if ($tipoFiltro) {
     $params[] = $tipoFiltro;
 }
 
-
+// Precios actuales
 $preciosActuales = fetchAll("
     SELECT tc.nombre, tc.variedad, 
            COALESCE(AVG(CASE WHEN ph.tipo_operacion = 'compra' THEN ph.precio END), 0) as precio_compra,
@@ -27,22 +25,51 @@ $preciosActuales = fetchAll("
     ORDER BY tc.nombre
 ", $params);
 
-
+// Tendencias mensuales para gráficos
 $tendenciasMensuales = fetchAll("
     SELECT tc.variedad,
            YEAR(ph.fecha_precio) as año,
            MONTH(ph.fecha_precio) as mes,
            COALESCE(AVG(CASE WHEN ph.tipo_operacion = 'compra' THEN ph.precio END), 0) as precio_compra_promedio,
-           COALESCE(AVG(CASE WHEN ph.tipo_operacion = 'venta' THEN ph.precio END), 0) as precio_venta_promedio
+           COALESCE(AVG(CASE WHEN ph.tipo_operacion = 'venta' THEN ph.precio END), 0) as precio_venta_promedio,
+           COUNT(ph.id) as total_transacciones
     FROM precios_historicos ph
     JOIN tipos_cafe tc ON ph.tipo_cafe_id = tc.id
     $whereClause
     AND ph.fecha_precio >= DATE_SUB(CURRENT_DATE, INTERVAL 6 MONTH)
     GROUP BY tc.variedad, YEAR(ph.fecha_precio), MONTH(ph.fecha_precio)
-    ORDER BY año DESC, mes DESC
+    ORDER BY año ASC, mes ASC
 ", $params);
 
+// Datos para gráfico de volumen por mes
+$volumenMensual = fetchAll("
+    SELECT 
+        YEAR(fecha_compra) as año,
+        MONTH(fecha_compra) as mes,
+        COUNT(*) as total_compras,
+        SUM(cantidad) as kilos_comprados,
+        SUM(total) as valor_compras
+    FROM compras 
+    WHERE estado = 'completada' 
+    AND fecha_compra >= DATE_SUB(CURRENT_DATE, INTERVAL 6 MONTH)
+    GROUP BY YEAR(fecha_compra), MONTH(fecha_compra)
+    
+    UNION ALL
+    
+    SELECT 
+        YEAR(fecha_venta) as año,
+        MONTH(fecha_venta) as mes,
+        COUNT(*) as total_ventas,
+        SUM(cantidad) as kilos_vendidos,
+        SUM(total) as valor_ventas
+    FROM ventas 
+    WHERE estado = 'completada' 
+    AND fecha_venta >= DATE_SUB(CURRENT_DATE, INTERVAL 6 MONTH)
+    GROUP BY YEAR(fecha_venta), MONTH(fecha_venta)
+    ORDER BY año ASC, mes ASC
+");
 
+// Estadísticas generales
 $estadisticas = fetchOne("
     SELECT 
         COALESCE(COUNT(DISTINCT c.id), 0) as total_compras,
@@ -56,7 +83,6 @@ $estadisticas = fetchOne("
     WHERE c.estado = 'completada' AND v.estado = 'completada'
 ");
 
-
 if (!$estadisticas) {
     $estadisticas = [
         'total_compras' => 0,
@@ -68,8 +94,68 @@ if (!$estadisticas) {
     ];
 }
 
-
 $tiposCafe = fetchAll("SELECT DISTINCT variedad FROM tipos_cafe WHERE activo = 1");
+
+// Preparar datos para JavaScript
+$mesesLabels = [];
+$preciosCompraData = [];
+$preciosVentaData = [];
+$volumenComprasData = [];
+$volumenVentasData = [];
+
+// Procesar tendencias mensuales para el gráfico de precios
+$tendenciasPorMes = [];
+foreach ($tendenciasMensuales as $tendencia) {
+    $mesKey = $tendencia['año'] . '-' . str_pad($tendencia['mes'], 2, '0', STR_PAD_LEFT);
+    if (!isset($tendenciasPorMes[$mesKey])) {
+        $tendenciasPorMes[$mesKey] = [
+            'mes' => $tendencia['mes'],
+            'año' => $tendencia['año'],
+            'precio_compra' => 0,
+            'precio_venta' => 0,
+            'count' => 0
+        ];
+    }
+    $tendenciasPorMes[$mesKey]['precio_compra'] += $tendencia['precio_compra_promedio'];
+    $tendenciasPorMes[$mesKey]['precio_venta'] += $tendencia['precio_venta_promedio'];
+    $tendenciasPorMes[$mesKey]['count']++;
+}
+
+// Procesar volumen mensual
+$volumenPorMes = [];
+foreach ($volumenMensual as $vol) {
+    $mesKey = $vol['año'] . '-' . str_pad($vol['mes'], 2, '0', STR_PAD_LEFT);
+    if (!isset($volumenPorMes[$mesKey])) {
+        $volumenPorMes[$mesKey] = [
+            'mes' => $vol['mes'],
+            'año' => $vol['año'],
+            'compras' => 0,
+            'ventas' => 0
+        ];
+    }
+    // Distinguir entre compras y ventas basado en las columnas
+    if (isset($vol['total_compras'])) {
+        $volumenPorMes[$mesKey]['compras'] = $vol['total_compras'];
+    }
+    if (isset($vol['total_ventas'])) {
+        $volumenPorMes[$mesKey]['ventas'] = $vol['total_ventas'];
+    }
+}
+
+// Generar arrays para JavaScript
+ksort($tendenciasPorMes);
+ksort($volumenPorMes);
+
+foreach ($tendenciasPorMes as $mesKey => $data) {
+    $mesesLabels[] = date('M Y', mktime(0, 0, 0, $data['mes'], 1, $data['año']));
+    $preciosCompraData[] = round($data['precio_compra'] / max($data['count'], 1), 0);
+    $preciosVentaData[] = round($data['precio_venta'] / max($data['count'], 1), 0);
+}
+
+foreach ($volumenPorMes as $mesKey => $data) {
+    $volumenComprasData[] = $data['compras'];
+    $volumenVentasData[] = $data['ventas'];
+}
 ?>
 
 <style>
@@ -177,15 +263,23 @@ $tiposCafe = fetchAll("SELECT DISTINCT variedad FROM tipos_cafe WHERE activo = 1
         color: #dc3545;
     }
 
-    .chart-placeholder {
-        height: 300px;
+    .chart-container {
+        height: 350px;
         background: #f8f9fa;
         border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #666;
-        text-align: center;
+        padding: 1rem;
+        position: relative;
+    }
+
+    .chart-canvas {
+        width: 100% !important;
+        height: 300px !important;
+    }
+
+    @media print {
+        .btn {
+            display: none;
+        }
     }
 </style>
 
@@ -280,23 +374,15 @@ $tiposCafe = fetchAll("SELECT DISTINCT variedad FROM tipos_cafe WHERE activo = 1
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
     <div class="analysis-card">
         <h4><i class="fas fa-chart-line"></i> Tendencia de Precios (6 meses)</h4>
-        <div class="chart-placeholder">
-            <div>
-                <i class="fas fa-chart-line" style="font-size: 3rem; margin-bottom: 1rem; color: #8B4513;"></i>
-                <p>Gráfico de tendencias de precios</p>
-                <p style="font-size: 0.8rem;">Implementar con Chart.js</p>
-            </div>
+        <div class="chart-container">
+            <canvas id="tendenciaChart" class="chart-canvas"></canvas>
         </div>
     </div>
     
     <div class="analysis-card">
         <h4><i class="fas fa-chart-bar"></i> Volumen de Transacciones</h4>
-        <div class="chart-placeholder">
-            <div>
-                <i class="fas fa-chart-bar" style="font-size: 3rem; margin-bottom: 1rem; color: #8B4513;"></i>
-                <p>Gráfico de volúmenes</p>
-                <p style="font-size: 0.8rem;">Comparativo mensual</p>
-            </div>
+        <div class="chart-container">
+            <canvas id="volumenChart" class="chart-canvas"></canvas>
         </div>
     </div>
 </div>
@@ -342,4 +428,186 @@ $tiposCafe = fetchAll("SELECT DISTINCT variedad FROM tipos_cafe WHERE activo = 1
 </div>
 <?php endif; ?>
 
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+<script>
+// Datos desde PHP
+const mesesLabels = <?php echo json_encode($mesesLabels); ?>;
+const preciosCompraData = <?php echo json_encode($preciosCompraData); ?>;
+const preciosVentaData = <?php echo json_encode($preciosVentaData); ?>;
+const volumenComprasData = <?php echo json_encode($volumenComprasData); ?>;
+const volumenVentasData = <?php echo json_encode($volumenVentasData); ?>;
+
+// Configuración común para los gráficos
+const commonOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: {
+            position: 'top',
+        }
+    },
+    scales: {
+        y: {
+            beginAtZero: true,
+            grid: {
+                color: 'rgba(139, 69, 19, 0.1)'
+            },
+            ticks: {
+                color: '#8B4513'
+            }
+        },
+        x: {
+            grid: {
+                color: 'rgba(139, 69, 19, 0.1)'
+            },
+            ticks: {
+                color: '#8B4513'
+            }
+        }
+    }
+};
+
+// Gráfico de Tendencia de Precios
+document.addEventListener('DOMContentLoaded', function() {
+    const ctxTendencia = document.getElementById('tendenciaChart').getContext('2d');
+    
+    new Chart(ctxTendencia, {
+        type: 'line',
+        data: {
+            labels: mesesLabels,
+            datasets: [
+                {
+                    label: 'Precio Compra',
+                    data: preciosCompraData,
+                    borderColor: '#dc3545',
+                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                    borderWidth: 3,
+                    fill: false,
+                    tension: 0.4,
+                    pointBackgroundColor: '#dc3545',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5
+                },
+                {
+                    label: 'Precio Venta',
+                    data: preciosVentaData,
+                    borderColor: '#28a745',
+                    backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                    borderWidth: 3,
+                    fill: false,
+                    tension: 0.4,
+                    pointBackgroundColor: '#28a745',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5
+                }
+            ]
+        },
+        options: {
+            ...commonOptions,
+            plugins: {
+                ...commonOptions.plugins,
+                title: {
+                    display: true,
+                    text: 'Evolución de Precios de Compra y Venta',
+                    color: '#8B4513',
+                    font: {
+                        size: 14,
+                        weight: 'bold'
+                    }
+                }
+            },
+            scales: {
+                ...commonOptions.scales,
+                y: {
+                    ...commonOptions.scales.y,
+                    title: {
+                        display: true,
+                        text: 'Precio (COP)',
+                        color: '#8B4513',
+                        font: {
+                            weight: 'bold'
+                        }
+                    },
+                    ticks: {
+                        ...commonOptions.scales.y.ticks,
+                        callback: function(value) {
+                            return '$' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Gráfico de Volumen de Transacciones
+    const ctxVolumen = document.getElementById('volumenChart').getContext('2d');
+    
+    new Chart(ctxVolumen, {
+        type: 'bar',
+        data: {
+            labels: mesesLabels,
+            datasets: [
+                {
+                    label: 'Compras',
+                    data: volumenComprasData,
+                    backgroundColor: 'rgba(139, 69, 19, 0.8)',
+                    borderColor: '#8B4513',
+                    borderWidth: 1,
+                    borderRadius: 4
+                },
+                {
+                    label: 'Ventas',
+                    data: volumenVentasData,
+                    backgroundColor: 'rgba(160, 82, 45, 0.8)',
+                    borderColor: '#A0522D',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }
+            ]
+        },
+        options: {
+            ...commonOptions,
+            plugins: {
+                ...commonOptions.plugins,
+                title: {
+                    display: true,
+                    text: 'Volumen Mensual de Transacciones',
+                    color: '#8B4513',
+                    font: {
+                        size: 14,
+                        weight: 'bold'
+                    }
+                }
+            },
+            scales: {
+                ...commonOptions.scales,
+                y: {
+                    ...commonOptions.scales.y,
+                    title: {
+                        display: true,
+                        text: 'Número de Transacciones',
+                        color: '#8B4513',
+                        font: {
+                            weight: 'bold'
+                        }
+                    }
+                }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            }
+        }
+    });
+});
+
+// Función para actualizar gráficos cuando cambian los filtros
+function actualizarGraficos() {
+    // Esta función se puede expandir para recargar datos via AJAX
+    console.log('Actualizando gráficos...');
+}
+</script>

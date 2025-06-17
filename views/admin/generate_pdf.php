@@ -17,13 +17,8 @@ if (!$factura) {
 try {
     $pdfContent = null;
     
-    if ($factura['tipo_transaccion'] === 'venta') {
-        // Para cooperativas - usar el método original
-        $pdfContent = PDFGenerator::generarFactura($facturaId);
-    } else {
-        // Para campesinos - CORREGIDO: pasar factura_id en lugar de compra_id
-        $pdfContent = PDFGenerator::generarFacturaCampesino($facturaId);
-    }
+    // CORREGIDO: Usar siempre el método principal que maneja ambos tipos
+    $pdfContent = PDFGenerator::generarFactura($facturaId);
     
     if ($pdfContent) {
         // Limpiar cualquier salida previa

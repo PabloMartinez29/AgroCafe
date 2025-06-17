@@ -2,61 +2,123 @@
 require_once 'config/database.php';
 require_once 'lib/pdf_generator.php';
 
+// Función para crear factura automáticamente si no existe
+function crearFacturaAutomatica($compraId) {
+    // Verificar si ya existe una factura para esta compra
+    $facturaExistente = fetchOne("SELECT id FROM facturas WHERE compra_id = ?", [$compraId]);
+    if ($facturaExistente) {
+        return $facturaExistente['id'];
+    }
+    
+    // Obtener datos de la compra
+    $compra = fetchOne("SELECT * FROM compras WHERE id = ?", [$compraId]);
+    if (!$compra) {
+        return false;
+    }
+    
+    // Crear factura automáticamente
+    $numeroFactura = 'FC' . str_pad($compraId, 3, '0', STR_PAD_LEFT) . '-' . date('Y');
+    $facturaData = [
+        'venta_id' => NULL,
+        'compra_id' => $compraId,
+        'numero_factura' => $numeroFactura,
+        'fecha_factura' => $compra['fecha_compra'],
+        'subtotal' => $compra['total'],
+        'impuestos' => 0,
+        'total' => $compra['total'],
+        'estado_pago' => 'pendiente',
+        'fecha_vencimiento' => date('Y-m-d', strtotime($compra['fecha_compra'] . ' +30 days')),
+        'tipo_transaccion' => 'compra'
+    ];
+    
+    if (insertRecord('facturas', $facturaData)) {
+        return fetchOne("SELECT id FROM facturas WHERE compra_id = ?", [$compraId])['id'];
+    }
+    
+    return false;
+}
 
+// MANEJO DE DESCARGA PDF - DEBE IR AL INICIO ANTES DE CUALQUIER HTML
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'download_pdf') {
     $compraId = intval($_POST['compra_id']);
     
+    // Verificar que la compra pertenece al campesino logueado
     $compra = fetchOne("SELECT * FROM compras WHERE id = ? AND campesino_id = ?", [$compraId, $_SESSION['user_id']]);
     
     if ($compra) {
-        ob_start();
-        $pdfContent = PDFGenerator::generarFacturaCampesino($compraId);
-        if ($pdfContent) {
-            // Guarda el PDF en un archivo temporal para depuración
-            $tempFile = 'temp_factura_' . $compraId . '.pdf';
-            file_put_contents($tempFile, $pdfContent);
-            error_log("PDF guardado en: $tempFile para compra_id: $compraId con longitud: " . strlen($pdfContent));
-
-            // Verifica si el contenido comienza con el encabezado PDF válido
-            if (substr($pdfContent, 0, 4) !== '%PDF') {
-                error_log("Error: El contenido no comienza con %PDF para compra_id: $compraId");
+        // Crear factura automáticamente si no existe
+        $facturaId = crearFacturaAutomatica($compraId);
+        
+        if ($facturaId) {
+            try {
+                // LIMPIAR COMPLETAMENTE EL BUFFER DE SALIDA
+                while (ob_get_level()) {
+                    ob_end_clean();
+                }
+                
+                // Generar el PDF
+                $pdfContent = PDFGenerator::generarFactura($facturaId);
+                
+                if ($pdfContent && strlen($pdfContent) > 0) {
+                    // Verificar que el contenido sea realmente un PDF
+                    if (substr($pdfContent, 0, 4) !== '%PDF') {
+                        throw new Exception("El contenido generado no es un PDF válido");
+                    }
+                    
+                    // Configurar headers correctos
+                    header('Content-Type: application/pdf');
+                    header('Content-Disposition: attachment; filename="factura_campesino_FC' . str_pad($compraId, 3, '0', STR_PAD_LEFT) . '.pdf"');
+                    header('Content-Length: ' . strlen($pdfContent));
+                    header('Cache-Control: no-cache, no-store, must-revalidate');
+                    header('Pragma: no-cache');
+                    header('Expires: 0');
+                    
+                    // Enviar el PDF
+                    echo $pdfContent;
+                    exit();
+                } else {
+                    throw new Exception("Error al generar el contenido del PDF");
+                }
+            } catch (Exception $e) {
+                error_log("Error al generar PDF para factura_id: $facturaId, compra_id: $compraId - " . $e->getMessage());
+                
+                // Limpiar cualquier salida
+                while (ob_get_level()) {
+                    ob_end_clean();
+                }
+                
+                // Enviar error HTTP
+                http_response_code(500);
+                header('Content-Type: text/plain');
+                echo "Error al generar el PDF: " . $e->getMessage();
+                exit();
             }
-
-            ob_end_clean();
-            header('Content-Type: application/pdf');
-            header('Content-Disposition: attachment; filename="factura_campesino_FC' . str_pad($compraId, 3, '0', STR_PAD_LEFT) . '.pdf"');
-            echo $pdfContent;
-            exit();
         } else {
-            ob_end_clean();
-            error_log("Fallo al generar el PDF para compra_id: $compraId");
-            http_response_code(500);
-            echo 'Error al generar el PDF. Consulta los logs para más detalles.';
-            exit();
+            error_log("Error al crear factura automática para compra_id: $compraId");
+            $error = "Error al crear la factura. Consulta con el administrador.";
         }
     } else {
-        $error = "No tienes permisos para descargar esta factura";
+        $error = "No tienes permisos para descargar esta factura o la compra no existe.";
     }
 }
 
 $campesino_id = $_SESSION['user_id'];
 
-
+// Resto del código para mostrar la vista...
 $facturasCampesino = fetchAll("
     SELECT c.*, tc.nombre as tipo_cafe, tc.variedad,
            pc.fecha_pago, pc.monto as monto_pagado, pc.metodo_pago, pc.referencia,
            CASE 
                WHEN pc.estado = 'completado' THEN 'Pagada'
-               WHEN pc.id IS NULL THEN 'Pendiente'
                ELSE 'Pendiente'
-           END as estado_factura
+           END as estado_factura,
+           CONCAT('FC', LPAD(c.id, 3, '0'), '-', YEAR(c.fecha_compra)) as numero_factura
     FROM compras c
     JOIN tipos_cafe tc ON c.tipo_cafe_id = tc.id
     LEFT JOIN pagos_campesinos pc ON c.id = pc.compra_id AND pc.estado = 'completado'
     WHERE c.campesino_id = ? AND c.estado = 'completada'
     ORDER BY c.fecha_compra DESC
 ", [$campesino_id]);
-
 
 $totalFacturas = count($facturasCampesino);
 $facturasPagadas = count(array_filter($facturasCampesino, function($f) { return $f['estado_factura'] == 'Pagada'; }));
@@ -178,6 +240,25 @@ $montoTotal = array_sum(array_column($facturasCampesino, 'total'));
         margin-bottom: 2rem;
         border-left: 4px solid #228B22;
     }
+
+    .loading {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+
+    .spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(255,255,255,.3);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
 </style>
 
 <?php if (isset($error)): ?>
@@ -189,7 +270,6 @@ $montoTotal = array_sum(array_column($facturasCampesino, 'total'));
 <h3 style="color: #228B22; margin-bottom: 2rem;">
     <i class="fas fa-file-invoice"></i> Mis Facturas
 </h3>
-
 
 <div class="stats-grid">
     <div class="stat-card">
@@ -212,7 +292,7 @@ $montoTotal = array_sum(array_column($facturasCampesino, 'total'));
 
 <div class="info-box">
     <p><i class="fas fa-info-circle" style="color: #228B22;"></i> 
-    Aquí puedes ver todas tus facturas y descargarlas en formato PDF. Las facturas se generan automáticamente cuando se registra una venta.</p>
+    Aquí puedes ver todas tus facturas y descargarlas en formato PDF. Las facturas se generan automáticamente cuando se registra una compra.</p>
 </div>
 
 <?php if ($facturasCampesino && count($facturasCampesino) > 0): ?>
@@ -234,7 +314,7 @@ $montoTotal = array_sum(array_column($facturasCampesino, 'total'));
             <tbody>
                 <?php foreach ($facturasCampesino as $factura): ?>
                     <tr>
-                        <td><strong>FC<?php echo str_pad($factura['id'], 3, '0', STR_PAD_LEFT); ?></strong></td>
+                        <td><strong><?php echo $factura['numero_factura']; ?></strong></td>
                         <td><?php echo date('d/m/Y', strtotime($factura['fecha_compra'])); ?></td>
                         <td>
                             <?php echo htmlspecialchars($factura['tipo_cafe']); ?>
@@ -257,7 +337,7 @@ $montoTotal = array_sum(array_column($facturasCampesino, 'total'));
                             <?php endif; ?>
                         </td>
                         <td>
-                            <form method="POST" style="display: inline;">
+                            <form method="POST" style="display: inline;" onsubmit="showLoading(this)">
                                 <input type="hidden" name="action" value="download_pdf">
                                 <input type="hidden" name="compra_id" value="<?php echo $factura['id']; ?>">
                                 <button type="submit" class="btn" style="padding: 0.5rem;" title="Descargar PDF">
@@ -285,7 +365,6 @@ $montoTotal = array_sum(array_column($facturasCampesino, 'total'));
     </div>
 <?php endif; ?>
 
-
 <div id="referenceModal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
     <div style="background-color: white; margin: 15% auto; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
@@ -309,6 +388,26 @@ function closeReferenceModal() {
     document.getElementById('referenceModal').style.display = 'none';
 }
 
+function showLoading(form) {
+    const button = form.querySelector('button');
+    const icon = button.querySelector('i');
+    
+    button.disabled = true;
+    button.classList.add('loading');
+    
+    if (icon) {
+        icon.className = 'fas fa-spinner fa-spin';
+    }
+    
+    // Restaurar después de 10 segundos por si hay error
+    setTimeout(() => {
+        button.disabled = false;
+        button.classList.remove('loading');
+        if (icon) {
+            icon.className = 'fas fa-file-pdf';
+        }
+    }, 10000);
+}
 
 window.onclick = function(event) {
     const modal = document.getElementById('referenceModal');

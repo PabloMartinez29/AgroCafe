@@ -1,10 +1,9 @@
 <?php
 require_once 'config/database.php';
 
-
 $campesino_id = $_SESSION['user_id'];
 
-
+// Precios del campesino
 $preciosCampesino = fetchAll("
     SELECT tc.nombre, tc.variedad,
            AVG(c.precio_kg) as precio_promedio,
@@ -18,6 +17,7 @@ $preciosCampesino = fetchAll("
     ORDER BY precio_promedio DESC
 ", [$campesino_id]);
 
+// Precios del mercado
 $preciosMercado = fetchAll("
     SELECT tc.nombre, tc.variedad,
            AVG(c.precio_kg) as precio_mercado
@@ -28,13 +28,13 @@ $preciosMercado = fetchAll("
     GROUP BY tc.id, tc.nombre, tc.variedad
 ");
 
-
+// Mapear precios de mercado
 $mercadoMap = [];
 foreach ($preciosMercado as $precio) {
     $mercadoMap[$precio['nombre']] = $precio['precio_mercado'];
 }
 
-
+// Evolución de precios del campesino (para gráfico de líneas)
 $evolucionPrecios = fetchAll("
     SELECT 
         YEAR(c.fecha_compra) as año,
@@ -46,10 +46,26 @@ $evolucionPrecios = fetchAll("
     WHERE c.campesino_id = ? AND c.estado = 'completada'
     AND c.fecha_compra >= DATE_SUB(CURRENT_DATE, INTERVAL 6 MONTH)
     GROUP BY YEAR(c.fecha_compra), MONTH(c.fecha_compra)
-    ORDER BY año DESC, mes DESC
+    ORDER BY año ASC, mes ASC
 ", [$campesino_id]);
 
+// Datos para comparación con mercado (últimos 6 meses)
+$comparacionMercado = fetchAll("
+    SELECT 
+        tc.nombre,
+        tc.variedad,
+        AVG(CASE WHEN c.campesino_id = ? THEN c.precio_kg END) as mi_precio,
+        AVG(CASE WHEN c.campesino_id != ? THEN c.precio_kg END) as precio_mercado
+    FROM compras c
+    JOIN tipos_cafe tc ON c.tipo_cafe_id = tc.id
+    WHERE c.estado = 'completada'
+    AND c.fecha_compra >= DATE_SUB(CURRENT_DATE, INTERVAL 6 MONTH)
+    GROUP BY tc.id, tc.nombre, tc.variedad
+    HAVING mi_precio IS NOT NULL AND precio_mercado IS NOT NULL
+    ORDER BY tc.nombre
+", [$campesino_id, $campesino_id]);
 
+// Estadísticas generales
 $estadisticasGenerales = fetchOne("
     SELECT 
         COUNT(*) as total_ventas,
@@ -62,7 +78,7 @@ $estadisticasGenerales = fetchOne("
     WHERE campesino_id = ? AND estado = 'completada'
 ", [$campesino_id]);
 
-
+// Mejor mes
 $mejorMes = fetchOne("
     SELECT 
         YEAR(fecha_compra) as año,
@@ -75,7 +91,7 @@ $mejorMes = fetchOne("
     LIMIT 1
 ", [$campesino_id]);
 
-
+// Tendencia actual vs anterior
 $tendenciaActual = fetchOne("
     SELECT AVG(precio_kg) as precio_promedio
     FROM compras
@@ -94,6 +110,28 @@ $tendenciaAnterior = fetchOne("
 $porcentajeTendencia = 0;
 if ($tendenciaAnterior['precio_promedio'] > 0) {
     $porcentajeTendencia = (($tendenciaActual['precio_promedio'] - $tendenciaAnterior['precio_promedio']) / $tendenciaAnterior['precio_promedio']) * 100;
+}
+
+// Preparar datos para JavaScript
+$mesesLabels = [];
+$preciosEvolucionData = [];
+$ingresosData = [];
+
+foreach ($evolucionPrecios as $mes) {
+    $mesesLabels[] = date('M Y', mktime(0, 0, 0, $mes['mes'], 1, $mes['año']));
+    $preciosEvolucionData[] = round($mes['precio_promedio'], 0);
+    $ingresosData[] = round($mes['ingresos_mes'], 0);
+}
+
+// Datos para comparación con mercado
+$tiposCafeLabels = [];
+$misPreciosData = [];
+$preciosMercadoData = [];
+
+foreach ($comparacionMercado as $comp) {
+    $tiposCafeLabels[] = $comp['nombre'];
+    $misPreciosData[] = round($comp['mi_precio'], 0);
+    $preciosMercadoData[] = round($comp['precio_mercado'], 0);
 }
 ?>
 
@@ -169,16 +207,17 @@ if ($tendenciaAnterior['precio_promedio'] > 0) {
         color: #6c757d;
     }
 
-    .chart-placeholder {
-        height: 300px;
+    .chart-container {
+        height: 350px;
         background: #f8f9fa;
         border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #666;
-        text-align: center;
-        border: 2px dashed #ddd;
+        padding: 1rem;
+        position: relative;
+    }
+
+    .chart-canvas {
+        width: 100% !important;
+        height: 300px !important;
     }
 
     .comparison-table {
@@ -206,6 +245,12 @@ if ($tendenciaAnterior['precio_promedio'] > 0) {
         margin-bottom: 2rem;
         border-left: 4px solid #228B22;
     }
+
+    @media print {
+        .chart-container {
+            height: 250px;
+        }
+    }
 </style>
 
 <h3 style="color: #228B22; margin-bottom: 2rem;">
@@ -213,7 +258,7 @@ if ($tendenciaAnterior['precio_promedio'] > 0) {
 </h3>
 
 <?php if ($estadisticasGenerales['total_ventas'] > 0): ?>
-  
+    <!-- Estadísticas principales -->
     <div class="stats-grid">
         <div class="stat-card">
             <h4>$<?php echo number_format($estadisticasGenerales['precio_promedio_general'], 0, ',', '.'); ?></h4>
@@ -233,7 +278,7 @@ if ($tendenciaAnterior['precio_promedio'] > 0) {
         </div>
     </div>
 
-    
+    <!-- Resumen de rendimiento -->
     <div class="highlight-box">
         <h4 style="color: #228B22; margin-bottom: 1rem;">
             <i class="fas fa-trophy"></i> Resumen de Mi Rendimiento
@@ -309,6 +354,23 @@ if ($tendenciaAnterior['precio_promedio'] > 0) {
         <?php endif; ?>
     </div>
 
+    <!-- Gráficos -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+        <div class="analysis-card">
+            <h4><i class="fas fa-chart-line"></i> Evolución de Mis Precios</h4>
+            <div class="chart-container">
+                <canvas id="evolucionChart" class="chart-canvas"></canvas>
+            </div>
+        </div>
+        
+        <div class="analysis-card">
+            <h4><i class="fas fa-chart-bar"></i> Comparación con el Mercado</h4>
+            <div class="chart-container">
+                <canvas id="comparacionChart" class="chart-canvas"></canvas>
+            </div>
+        </div>
+    </div>
+
     <!-- Evolución mensual -->
     <?php if ($evolucionPrecios && count($evolucionPrecios) > 0): ?>
         <div class="analysis-card">
@@ -355,31 +417,6 @@ if ($tendenciaAnterior['precio_promedio'] > 0) {
         </div>
     <?php endif; ?>
 
-    
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
-        <div class="analysis-card">
-            <h4><i class="fas fa-chart-line"></i> Evolución de Mis Precios</h4>
-            <div class="chart-placeholder">
-                <div>
-                    <i class="fas fa-chart-line" style="font-size: 3rem; margin-bottom: 1rem; color: #228B22;"></i>
-                    <p>Gráfico de evolución de precios personales</p>
-                    <p style="font-size: 0.8rem;">Últimos 6 meses</p>
-                </div>
-            </div>
-        </div>
-        
-        <div class="analysis-card">
-            <h4><i class="fas fa-chart-bar"></i> Comparación con el Mercado</h4>
-            <div class="chart-placeholder">
-                <div>
-                    <i class="fas fa-chart-bar" style="font-size: 3rem; margin-bottom: 1rem; color: #228B22;"></i>
-                    <p>Comparación de precios vs mercado</p>
-                    <p style="font-size: 0.8rem;">Por tipo de café</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
 <?php else: ?>
     <div style="text-align: center; padding: 3rem; background: white; border-radius: 10px; color: #666;">
         <i class="fas fa-chart-line" style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.3;"></i>
@@ -388,3 +425,220 @@ if ($tendenciaAnterior['precio_promedio'] > 0) {
         <p>Una vez que realices ventas, podrás ver aquí estadísticas detalladas de tus precios y tendencias.</p>
     </div>
 <?php endif; ?>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// Datos desde PHP
+const mesesLabels = <?php echo json_encode($mesesLabels); ?>;
+const preciosEvolucionData = <?php echo json_encode($preciosEvolucionData); ?>;
+const ingresosData = <?php echo json_encode($ingresosData); ?>;
+const tiposCafeLabels = <?php echo json_encode($tiposCafeLabels); ?>;
+const misPreciosData = <?php echo json_encode($misPreciosData); ?>;
+const preciosMercadoData = <?php echo json_encode($preciosMercadoData); ?>;
+
+// Configuración común para los gráficos
+const commonOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: {
+            position: 'top',
+        }
+    },
+    scales: {
+        y: {
+            beginAtZero: true,
+            grid: {
+                color: 'rgba(34, 139, 34, 0.1)'
+            },
+            ticks: {
+                color: '#228B22'
+            }
+        },
+        x: {
+            grid: {
+                color: 'rgba(34, 139, 34, 0.1)'
+            },
+            ticks: {
+                color: '#228B22'
+            }
+        }
+    }
+};
+
+// Gráfico de Evolución de Precios
+document.addEventListener('DOMContentLoaded', function() {
+    const ctxEvolucion = document.getElementById('evolucionChart').getContext('2d');
+    
+    new Chart(ctxEvolucion, {
+        type: 'line',
+        data: {
+            labels: mesesLabels,
+            datasets: [
+                {
+                    label: 'Mis Precios',
+                    data: preciosEvolucionData,
+                    borderColor: '#228B22',
+                    backgroundColor: 'rgba(34, 139, 34, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#228B22',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                },
+                {
+                    label: 'Ingresos (x1000)',
+                    data: ingresosData.map(val => val / 1000),
+                    borderColor: '#32CD32',
+                    backgroundColor: 'rgba(50, 205, 50, 0.1)',
+                    borderWidth: 2,
+                    fill: false,
+                    tension: 0.4,
+                    pointBackgroundColor: '#32CD32',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            ...commonOptions,
+            plugins: {
+                ...commonOptions.plugins,
+                title: {
+                    display: true,
+                    text: 'Mi Evolución de Precios e Ingresos',
+                    color: '#228B22',
+                    font: {
+                        size: 14,
+                        weight: 'bold'
+                    }
+                }
+            },
+            scales: {
+                ...commonOptions.scales,
+                y: {
+                    ...commonOptions.scales.y,
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Precio por Kg (COP)',
+                        color: '#228B22',
+                        font: {
+                            weight: 'bold'
+                        }
+                    },
+                    ticks: {
+                        ...commonOptions.scales.y.ticks,
+                        callback: function(value) {
+                            return '$' + value.toLocaleString();
+                        }
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Ingresos (Miles COP)',
+                        color: '#32CD32',
+                        font: {
+                            weight: 'bold'
+                        }
+                    },
+                    grid: {
+                        drawOnChartArea: false,
+                    },
+                    ticks: {
+                        color: '#32CD32',
+                        callback: function(value) {
+                            return '$' + (value * 1000).toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Gráfico de Comparación con el Mercado
+    const ctxComparacion = document.getElementById('comparacionChart').getContext('2d');
+    
+    new Chart(ctxComparacion, {
+        type: 'bar',
+        data: {
+            labels: tiposCafeLabels,
+            datasets: [
+                {
+                    label: 'Mis Precios',
+                    data: misPreciosData,
+                    backgroundColor: 'rgba(34, 139, 34, 0.8)',
+                    borderColor: '#228B22',
+                    borderWidth: 1,
+                    borderRadius: 4
+                },
+                {
+                    label: 'Precio de Mercado',
+                    data: preciosMercadoData,
+                    backgroundColor: 'rgba(255, 193, 7, 0.8)',
+                    borderColor: '#ffc107',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }
+            ]
+        },
+        options: {
+            ...commonOptions,
+            plugins: {
+                ...commonOptions.plugins,
+                title: {
+                    display: true,
+                    text: 'Mis Precios vs Mercado por Tipo de Café',
+                    color: '#228B22',
+                    font: {
+                        size: 14,
+                        weight: 'bold'
+                    }
+                }
+            },
+            scales: {
+                ...commonOptions.scales,
+                y: {
+                    ...commonOptions.scales.y,
+                    title: {
+                        display: true,
+                        text: 'Precio por Kg (COP)',
+                        color: '#228B22',
+                        font: {
+                            weight: 'bold'
+                        }
+                    },
+                    ticks: {
+                        ...commonOptions.scales.y.ticks,
+                        callback: function(value) {
+                            return '$' + value.toLocaleString();
+                        }
+                    }
+                }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            }
+        }
+    });
+});
+
+// Función para imprimir el reporte
+function imprimirReporte() {
+    window.print();
+}
+</script>
