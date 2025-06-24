@@ -204,5 +204,88 @@ class EmailSender {
             return false;
         }
     }
+
+    public function enviarRecuperacionPassword($user, $resetUrl) {
+        try {
+            $this->mail->addAddress($user['email'], $user['nombre']);
+            $this->mail->isHTML(true);
+            $this->mail->Subject = 'Recuperación de contraseña - CaféTrade';
+            
+            $body = $this->generarCuerpoEmailRecuperacion($user, $resetUrl);
+            $this->mail->Body = $body;
+            $this->mail->AltBody = strip_tags($body);
+            
+            $result = $this->mail->send();
+            error_log("Email de recuperación enviado " . ($result ? "exitosamente" : "con errores") . " a {$user['email']}");
+            
+            // Limpiar destinatarios para próximo uso
+            $this->mail->clearAddresses();
+            
+            return $result;
+            
+        } catch (Exception $e) {
+            error_log("Error enviando email de recuperación a {$user['email']}: " . $e->getMessage());
+            error_log("PHPMailer ErrorInfo: {$this->mail->ErrorInfo}");
+            return false;
+        }
+    }
+
+    private function generarCuerpoEmailRecuperacion($user, $resetUrl) {
+        return '
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .header { background: #8B4513; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }
+                .content { padding: 30px; background: #f9f9f9; }
+                .footer { background: #f8f9fa; padding: 15px; text-align: center; font-size: 12px; color: #666; border-radius: 0 0 10px 10px; }
+                .button { display: inline-block; background: #8B4513; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+                .url-box { word-break: break-all; background: #fff; padding: 10px; border: 1px solid #ddd; margin: 15px 0; }
+            </style>
+        </head>
+        <body>
+            <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div class="header">
+                    <h1>🔑 Recuperación de Contraseña</h1>
+                    <p>AgroCafé - Sistema de Gestión</p>
+                </div>
+                
+                <div class="content">
+                    <h2>Hola ' . htmlspecialchars($user['nombre']) . ',</h2>
+                    
+                    <p>Has solicitado restablecer tu contraseña en AgroCafé.</p>
+                    
+                    <p>Haz clic en el siguiente botón para crear una nueva contraseña:</p>
+                    
+                    <div style="text-align: center;" style list-style-type: none;>
+                        <a href="' . $resetUrl . '" class="button">
+                            🔓 Restablecer mi Contraseña
+                        </a>
+                    </div>
+                    
+                    <p><strong>⏰ Este enlace expirará en 1 hora.</strong></p>
+                    
+                    <p>Si no puedes hacer clic en el botón, copia y pega este enlace en tu navegador:</p>
+                    <div class="url-box">
+                        ' . $resetUrl . '
+                    </div>
+                    
+                    <p>Si no solicitaste este cambio, puedes ignorar este mensaje.</p>
+                    
+                    <p>Saludos,<br><strong>Equipo AgroCafé</strong></p>
+                </div>
+                
+                <div class="footer">
+                    <p><strong>🌱 AgroCafé - Sistema de Gestión de Café</strong></p>
+                    <p>📧 agrocafe1129@gmail.com</p>
+                    <hr style="border: none; border-top: 1px solid #ddd; margin: 10px 0;">
+                    <p><small>Este es un mensaje automático, por favor no responda directamente a este correo.</small></p>
+                </div>
+            </div>
+        </body>
+        </html>';
+    }
 }
 ?>

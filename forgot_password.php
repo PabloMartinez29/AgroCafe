@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'config/database.php';
+require_once 'lib/email_sender.php';
 
 // Crear tabla de tokens de restablecimiento si no existe
 $createTableSQL = "
@@ -26,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (empty($email)) {
         $error = "Por favor ingrese su correo electrónico";
     } else {
- 
+        // Buscar usuario
         $user = fetchOne("SELECT id, nombre, email, activo FROM usuarios WHERE email = ?", [$email]);
         
         if (!$user) {
@@ -34,13 +35,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         } elseif (!$user['activo']) {
             $error = "Esta cuenta está desactivada. Contacte al administrador";
         } else {
-
+            // Generar token seguro
             $token = bin2hex(random_bytes(32)); 
             
-
+            // Establecer expiración (1 hora)
             $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour'));
             
-
+            // Guardar token en base de datos
             $tokenData = [
                 'user_id' => $user['id'],
                 'token' => $token,
@@ -48,39 +49,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             ];
             
             if (insertRecord('password_reset_tokens', $tokenData)) {
-
-                $resetUrl = "http://" . $_SERVER['HTTP_HOST'] . "/reset_password.php?token=" . $token;
+                // Construir URL de reset
+                $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+                $host = $_SERVER['HTTP_HOST'];
+                $currentDir = dirname($_SERVER['REQUEST_URI']);
+                $resetUrl = $protocol . "://" . $host . $currentDir . "/reset_password.php?token=" . $token;
                 
-
-                $success = true;
-                $resetLink = $resetUrl;
-                
-
-                
-                $to = $user['email'];
-                $subject = "Recuperación de contraseña - CaféTrade";
-                $message = "
-                <html>
-                <head>
-                    <title>Recuperación de contraseña</title>
-                </head>
-                <body>
-                    <h2>Recuperación de contraseña - CaféTrade</h2>
-                    <p>Hola {$user['nombre']},</p>
-                    <p>Has solicitado restablecer tu contraseña. Haz clic en el siguiente enlace para crear una nueva contraseña:</p>
-                    <p><a href='{$resetUrl}'>Restablecer mi contraseña</a></p>
-                    <p>Este enlace expirará en 1 hora.</p>
-                    <p>Si no solicitaste este cambio, puedes ignorar este mensaje.</p>
-                    <p>Saludos,<br>Equipo CaféTrade</p>
-                </body>
-                </html>
-                ";
-                
-                $headers = "MIME-Version: 1.0" . "\r\n";
-                $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-                $headers .= "From: noreply@cafetrade.com" . "\r\n";
-                
-                mail($to, $subject, $message, $headers);
+                // USAR EmailSender en lugar de mail()
+                try {
+                    $emailSender = new EmailSender();
+                    $emailSent = $emailSender->enviarRecuperacionPassword($user, $resetUrl);
+                    
+                    if ($emailSent) {
+                        $success = true;
+                        error_log("Password reset email sent successfully to: " . $email);
+                    } else {
+                        $error = "Error al enviar el correo. Por favor contacte al administrador";
+                        error_log("Failed to send password reset email to: " . $email);
+                    }
+                } catch (Exception $e) {
+                    $error = "Error al enviar el correo: " . $e->getMessage();
+                    error_log("Exception sending password reset email: " . $e->getMessage());
+                }
                 
             } else {
                 $error = "Error al procesar la solicitud. Intente nuevamente";
@@ -124,15 +114,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             border-radius: 5px;
             margin-bottom: 1rem;
             text-align: center;
+            border-left: 4px solid #dc3545;
         }
         
         .success {
             background: #d4edda;
             color: #155724;
-            padding: 1rem;
+            padding: 1.5rem;
             border-radius: 5px;
             margin-bottom: 1rem;
             text-align: center;
+            border-left: 4px solid #28a745;
         }
         
         .back-link {
@@ -140,10 +132,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             margin-bottom: 1rem;
             color: #8B4513;
             text-decoration: none;
+            transition: all 0.3s ease;
         }
         
         .back-link:hover {
             text-decoration: underline;
+            color: #A0522D;
+        }
+
+        .page-title {
+            text-align: center;
+            color: #8B4513;
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+            font-weight: 600;
         }
 
         .form-group {
@@ -163,11 +165,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             border: 2px solid #ddd;
             border-radius: 8px;
             font-size: 1rem;
+            transition: border-color 0.3s ease;
+            box-sizing: border-box;
         }
 
         .form-group input:focus {
             outline: none;
             border-color: #8B4513;
+            box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.1);
         }
 
         .btn {
@@ -184,6 +189,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             justify-content: center;
             gap: 0.5rem;
             transition: all 0.3s ease;
+            text-decoration: none;
         }
 
         .btn:hover {
@@ -191,14 +197,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             transform: translateY(-2px);
         }
         
-        .reset-link {
-            word-break: break-all;
-            background: #f8f9fa;
-            padding: 1rem;
-            border-radius: 5px;
-            margin-top: 1rem;
-            border: 1px dashed #ddd;
-            font-family: monospace;
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
         }
         
         .info-text {
@@ -206,6 +208,32 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             font-size: 0.9rem;
             margin-top: 1rem;
             text-align: center;
+            line-height: 1.5;
+        }
+        
+        .email-icon {
+            font-size: 3rem;
+            color: #28a745;
+            margin-bottom: 1rem;
+        }
+        
+        .description-text {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #666;
+            line-height: 1.5;
+        }
+        
+        .btn-container {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+        
+        .btn-centered {
+            display: inline-block;
+            width: auto;
+            min-width: 200px;
+            padding: 1rem 2rem;
         }
     </style>
 </head>
@@ -215,7 +243,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <i class="fas fa-arrow-left"></i> Volver al inicio de sesión
         </a>
         
-        <h2 style="text-align: center; color: #8B4513; margin-bottom: 1.5rem;">
+        <h2 class="page-title">
             <i class="fas fa-key"></i> Recuperar Contraseña
         </h2>
         
@@ -228,22 +256,37 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         <?php if ($success): ?>
             <div class="success">
-                <i class="fas fa-check-circle"></i>
-                <p>Se ha enviado un enlace de recuperación a tu correo electrónico.</p>
-                <p>Por favor revisa tu bandeja de entrada y sigue las instrucciones.</p>
-                
-
-                <div class="reset-link">
-                    <strong>Enlace de recuperación (solo para desarrollo):</strong><br>
-                    <a href="<?php echo $resetLink; ?>" target="_blank"><?php echo $resetLink; ?></a>
+                <div class="email-icon">
+                    <i class="fas fa-envelope-circle-check"></i>
                 </div>
+                <h3 style="margin-bottom: 1rem;">¡Correo Enviado!</h3>
+                <p><strong>Se ha enviado un enlace de recuperación a tu correo electrónico.</strong></p>
+                <p>Por favor:</p>
+                <ol style="text-align: left; margin: 1rem 0;">
+                    <li>Revisa tu bandeja de entrada</li>
+                    <li>Busca el correo de "CaféTrade"</li>
+                    <li>Haz clic en el enlace de recuperación</li>
+                    <li>Sigue las instrucciones para crear tu nueva contraseña</li>
+                </ol>
+                <p style="font-size: 0.9rem; margin-top: 1rem;">
+                    <i class="fas fa-clock"></i> El enlace expirará en <strong>1 hora</strong>
+                </p>
+                <p style="font-size: 0.9rem;">
+                    <i class="fas fa-info-circle"></i> Si no ves el correo, revisa tu carpeta de spam
+                </p>
+            </div>
+            
+            <div class="btn-container">
+                <a href="login.php" class="btn btn-centered">
+                    <i class="fas fa-sign-in-alt"></i> Volver al Login
+                </a>
             </div>
         <?php else: ?>
-            <p style="text-align: center; margin-bottom: 2rem;">
+            <p class="description-text">
                 Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.
             </p>
             
-            <form method="POST">
+            <form method="POST" id="resetForm">
                 <div class="form-group">
                     <label for="email">
                         <i class="fas fa-envelope"></i> Correo Electrónico:
@@ -253,17 +296,30 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                            placeholder="Ingresa tu correo electrónico">
                 </div>
                 
-                <button type="submit" class="btn">
+                <button type="submit" class="btn" id="submitBtn">
                     <i class="fas fa-paper-plane"></i>
                     Enviar Enlace de Recuperación
                 </button>
             </form>
             
             <p class="info-text">
-                <i class="fas fa-info-circle"></i>
-                Si no recuerdas tu correo electrónico, contacta al administrador del sistema.
+                <i class="fas fa-shield-alt"></i>
+                Tu información está segura. Solo enviaremos el enlace al correo registrado en tu cuenta.
+            </p>
+            
+            <p class="info-text">
+                <i class="fas fa-question-circle"></i>
+                ¿No recuerdas tu correo? Contacta al administrador del sistema.
             </p>
         <?php endif; ?>
     </div>
+    
+    <script>
+        document.getElementById('resetForm')?.addEventListener('submit', function() {
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+        });
+    </script>
 </body>
 </html>
