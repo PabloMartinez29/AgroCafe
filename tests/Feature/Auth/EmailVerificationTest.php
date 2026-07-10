@@ -13,6 +13,14 @@ class EmailVerificationTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // User no implementa MustVerifyEmail; la verificación de email está desactivada en la app.
+        $this->markTestSkipped('Email verification is disabled (User does not implement MustVerifyEmail).');
+    }
+
     public function test_email_verification_screen_can_be_rendered(): void
     {
         $user = User::factory()->unverified()->create();
