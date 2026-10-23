@@ -1,60 +1,108 @@
-<<<<<<< HEAD
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
-
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <img src="public/favicon.svg" alt="AgroCafé" width="72" height="72">
 </p>
 
-## About Laravel
+<h1 align="center">AgroCafé</h1>
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+<p align="center">
+  Sistema de gestión para la compra, venta e inventario de café.<br>
+  Conecta administradores, campesinos y cooperativas en un solo lugar.
+</p>
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+<p align="center">
+  <img alt="Laravel 12" src="https://img.shields.io/badge/Laravel-12-red">
+  <img alt="PHP 8.2" src="https://img.shields.io/badge/PHP-8.2-777BB4">
+  <img alt="MySQL" src="https://img.shields.io/badge/MySQL-8-4479A1">
+  <img alt="CI" src="https://github.com/PabloMartinez29/AgroCafe/actions/workflows/ci.yml/badge.svg">
+</p>
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## De qué se trata
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+AgroCafé digitaliza el día a día de un negocio cafetero: registrar compras a productores, controlar la bodega, abrir y cerrar caja, facturar, pagar y consultar precios.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Está pensado para dos perfiles:
 
-## Laravel Sponsors
+| Perfil | Qué puede hacer |
+| --- | --- |
+| **Administrador** | Usuarios, caja, compras, ventas, bodega, facturas, pagos, cooperativas, tipos de café y análisis de precios |
+| **Campesino / productor** | Ver sus compras, facturas y el análisis de precios; descargar PDF de sus facturas |
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+También expone una **API** con Laravel Sanctum para que una app móvil se conecte al mismo sistema.
 
-### Premium Partners
+## Módulos
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+- **Caja** — apertura, cierre y control de saldo antes de comprar
+- **Compras** — registro de café adquirido a cada productor
+- **Ventas** — comercialización del inventario
+- **Bodega** — movimientos de inventario
+- **Facturación** — generación de PDF y envío por correo
+- **Pagos** — seguimiento de pagos a campesinos
+- **Cooperativas y tipos de café** — catálogos del negocio
+- **Análisis de precios** — consulta de precios históricos y en tiempo real
 
-## Contributing
+## Stack
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+- PHP 8.2 y Laravel 12
+- MySQL
+- Blade, Tailwind CSS y Alpine.js
+- Vite
+- Laravel Sanctum (API)
+- DomPDF (facturas)
 
-## Code of Conduct
+## Requisitos
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+- PHP 8.2 o superior (en Laragon, selecciona esa versión)
+- Composer
+- Node.js 18+ (recomendado 22)
+- MySQL 8
 
-## Security Vulnerabilities
+## Instalación local
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+git clone https://github.com/PabloMartinez29/AgroCafe.git
+cd AgroCafe
 
-## License
+composer install
+copy .env.example .env
+php artisan key:generate
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Crea la base de datos `agrocafe` y ajusta `DB_*` en `.env`. Luego:
+
+```bash
+php artisan migrate --seed
+npm install
+npm run build
+php artisan serve
+```
+
+El panel queda en [http://127.0.0.1:8000](http://127.0.0.1:8000).
+
+En desarrollo también puedes usar `composer run dev` para levantar servidor, colas y Vite a la vez.
+
+### Usuario inicial
+
+El seeder crea un administrador de prueba:
+
+- **Correo:** `admin@agrocafe.com`
+- **Contraseña:** `admin123`
+
+Cámbiala después del primer inicio de sesión. No la uses en producción.
+
+## API
+
+Las rutas de la API viven en `routes/api.php`. La autenticación es por token Sanctum (`/api/login`). El campesino solo ve sus propios datos; el administrador ve todo el negocio.
+
+## Pruebas
+
+```bash
+php artisan test
+```
+
+El CI de GitHub Actions corre las mismas pruebas en las ramas `main` y `develop`.
+
+## Licencia
+
+Proyecto académico / de gestión interna. El framework Laravel se distribuye bajo licencia MIT.
