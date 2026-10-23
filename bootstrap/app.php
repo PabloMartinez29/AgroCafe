@@ -12,12 +12,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
             'peasant' => \App\Http\Middleware\EnsureUserIsPeasant::class,
             'active' => \App\Http\Middleware\EnsureUserIsActive::class,
         ]);
-        
+
         // Configurar CORS para permitir peticiones desde la app móvil
         $middleware->api(prepend: [
             \Illuminate\Http\Middleware\HandleCors::class,
