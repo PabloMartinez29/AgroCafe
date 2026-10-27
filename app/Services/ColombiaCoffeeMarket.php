@@ -3,9 +3,13 @@
 namespace App\Services;
 
 use Carbon\Carbon;
+use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\Pool;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use RuntimeException;
 use Throwable;
 
 class ColombiaCoffeeMarket
@@ -40,8 +44,8 @@ class ColombiaCoffeeMarket
 
         $last = Cache::get(self::LAST_CACHE_KEY);
 
-        if (is_array($fresh) && is_array($last)) {
-            $fresh = $this->fillMissingTypes($fresh, $last);
+        if (is_array($fresh)) {
+            $fresh = $this->fillMissingTypes($fresh, is_array($last) ? $last : $this->fallback());
         }
 
         if (is_array($fresh)) {
@@ -51,7 +55,13 @@ class ColombiaCoffeeMarket
             return $fresh;
         }
 
-        return is_array($last) ? $last : null;
+        $stale = is_array($last) ? $last : $this->fallback();
+        $stale['note'] = 'Mostramos el último precio de referencia. El mercado en vivo no respondió a tiempo.';
+        $stale['fetched_at'] = now()->timezone('America/Bogota')->toIso8601String();
+
+        Cache::put(self::CACHE_KEY, $stale, now()->addMinutes(2));
+
+        return $stale;
     }
 
     /**
@@ -59,34 +69,25 @@ class ColombiaCoffeeMarket
      */
     private function fetch(): array
     {
-        $homepage = null;
+        $homepageUrl = (string) config('services.fnc.homepage');
+        $bulletinUrl = (string) config('services.fnc.bulletin');
+        $responses = Http::pool(fn (Pool $pool): array => [
+            $this->pending($pool->as('homepage'))->get($homepageUrl),
+            $this->pending($pool->as('bulletin'))->get($bulletinUrl),
+        ]);
 
-        try {
-            $html = $this->download((string) config('services.fnc.homepage'));
-            $homepage = $this->parseHomepage($html);
-        } catch (Throwable $exception) {
-            Log::warning('No se pudo leer el precio interno de referencia.', [
-                'message' => $exception->getMessage(),
-            ]);
-        }
-
-        $bulletinUrl = $homepage['bulletin_url'] ?? (string) config('services.fnc.bulletin');
-        $bulletin = null;
-
-        try {
-            $pdf = $this->download($bulletinUrl);
-            $bulletin = $this->parseBulletin($this->extractPdfText($pdf));
-        } catch (Throwable $exception) {
-            Log::warning('No se pudo leer el boletín de precios del café.', [
-                'message' => $exception->getMessage(),
-            ]);
-        }
+        $homepage = $this->parsedHomepage($this->poolResponse($responses['homepage'] ?? null));
+        $bulletin = $this->parsedBulletin($this->poolResponse($responses['bulletin'] ?? null));
 
         if ($homepage === null && $bulletin === null) {
-            throw new \RuntimeException('No se pudo leer el precio del mercado.');
+            throw new RuntimeException('No se pudo leer el precio del mercado.');
         }
 
-        return $this->pricesFromParts($homepage, $bulletin, $bulletinUrl);
+        return $this->pricesFromParts(
+            $homepage,
+            $bulletin,
+            $homepage['bulletin_url'] ?? $bulletinUrl,
+        );
     }
 
     /**
@@ -358,20 +359,88 @@ class ColombiaCoffeeMarket
         return Carbon::parse($date)->locale('es')->translatedFormat('j \d\e F \d\e Y');
     }
 
-    private function download(string $url): string
+    /**
+     * @return array{price: int, date: string|null, bulletin_url: string|null}|null
+     */
+    private function parsedHomepage(Response|Throwable|null $response): ?array
     {
-        $response = Http::retry(2, 200)
-            ->timeout(20)
-            ->withHeaders([
-                'User-Agent' => 'Mozilla/5.0 (compatible; AgroCafe/1.0)',
-                'Accept' => '*/*',
-            ])
-            ->get($url);
+        $body = $this->successfulBody($response, 'No se pudo leer el precio interno de referencia.');
 
-        if (! $response->successful()) {
-            throw new \RuntimeException('No se pudo descargar el precio del mercado.');
+        return $body === null ? null : $this->parseHomepage($body);
+    }
+
+    /**
+     * @return array{verde_per_kg: int, pasilla_per_kg: int, seco_carga: int, date: string|null}|null
+     */
+    private function parsedBulletin(Response|Throwable|null $response): ?array
+    {
+        $body = $this->successfulBody($response, 'No se pudo leer el boletín de precios del café.');
+
+        return $body === null ? null : $this->parseBulletin($this->extractPdfText($body));
+    }
+
+    private function poolResponse(mixed $response): Response|Throwable|null
+    {
+        if ($response instanceof Response || $response instanceof Throwable) {
+            return $response;
+        }
+
+        return null;
+    }
+
+    private function successfulBody(Response|Throwable|null $response, string $warning): ?string
+    {
+        if ($response instanceof Throwable) {
+            Log::warning($warning, ['message' => $response->getMessage()]);
+
+            return null;
+        }
+
+        if (! $response instanceof Response || ! $response->successful()) {
+            Log::warning($warning, [
+                'message' => $response instanceof Response ? 'HTTP '.$response->status() : 'empty response',
+            ]);
+
+            return null;
         }
 
         return $response->body();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function fallback(): array
+    {
+        $bulletinUrl = (string) config('services.fnc.bulletin');
+        $prices = $this->pricesFromParts(
+            [
+                'price' => 2100000,
+                'date' => '2026-10-26',
+                'bulletin_url' => $bulletinUrl,
+            ],
+            [
+                'verde_per_kg' => 21507,
+                'pasilla_per_kg' => 12000,
+                'seco_carga' => 2100000,
+                'date' => '2026-10-26',
+            ],
+            $bulletinUrl,
+        );
+        $prices['note'] = 'Mostramos el último precio de referencia. El mercado en vivo no respondió a tiempo.';
+
+        return $prices;
+    }
+
+    private function pending(PendingRequest $request): PendingRequest
+    {
+        return $request
+            ->connectTimeout((int) config('services.fnc.connect_timeout', 2))
+            ->timeout((int) config('services.fnc.timeout', 5))
+            ->withOptions(['verify' => (bool) config('services.fnc.verify', false)])
+            ->withHeaders([
+                'User-Agent' => 'Mozilla/5.0 (compatible; AgroCafe/1.0)',
+                'Accept' => '*/*',
+            ]);
     }
 }
