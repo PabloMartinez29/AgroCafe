@@ -96,13 +96,23 @@ class CoffeeMarketPriceTest extends TestCase
             ->assertJsonPath('types.1.date', '2026-10-28');
     }
 
-    public function test_market_prices_fail_when_the_source_is_unavailable(): void
+    public function test_market_prices_use_fallback_when_the_source_is_unavailable(): void
     {
+        Cache::flush();
+
         Http::fake([
             '*' => Http::response('error', 500),
         ]);
 
-        $this->getJson(route('coffee-market.prices'))->assertStatus(503);
+        $this->getJson(route('coffee-market.prices'))
+            ->assertOk()
+            ->assertJsonPath('types.0.key', 'verde')
+            ->assertJsonPath('types.0.price', 21507)
+            ->assertJsonPath('types.1.key', 'seco')
+            ->assertJsonPath('types.1.price', 2100000)
+            ->assertJsonPath('types.2.key', 'pasilla')
+            ->assertJsonPath('types.2.price', 12000)
+            ->assertJsonPath('note', 'Mostramos el último precio de referencia. El mercado en vivo no respondió a tiempo.');
     }
 
     private function fakeMarket(string $carga, string $date): void

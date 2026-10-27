@@ -38,6 +38,9 @@ return [
     'fnc' => [
         'homepage' => env('FNC_HOMEPAGE_URL', 'https://federaciondecafeteros.org/'),
         'bulletin' => env('FNC_BULLETIN_URL', 'https://federaciondecafeteros.org/wp-content/uploads/2026/03/precio_cafe.pdf'),
+        'timeout' => (int) env('FNC_TIMEOUT', 5),
+        'connect_timeout' => (int) env('FNC_CONNECT_TIMEOUT', 2),
+        'verify' => filter_var(env('FNC_VERIFY_SSL', false), FILTER_VALIDATE_BOOL),
     ],
 
 ];

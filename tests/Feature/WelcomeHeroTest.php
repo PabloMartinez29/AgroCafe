@@ -104,10 +104,12 @@ class WelcomeHeroTest extends TestCase
 
     public function test_the_hero_video_can_be_seeked_by_byte_range(): void
     {
-        $videoPath = storage_path('app/videos/gemini_generated_video_079d102d.mp4');
+        $videoPath = $this->heroVideoPath();
         $createdTemporaryVideo = false;
 
-        if (! is_file($videoPath)) {
+        if ($videoPath === null) {
+            $videoPath = public_path('video/gemini_generated_video_079d102d.mp4');
+
             if (! is_dir(dirname($videoPath))) {
                 mkdir(dirname($videoPath), 0755, true);
             }
@@ -135,12 +137,24 @@ class WelcomeHeroTest extends TestCase
 
     public function test_the_hero_video_returns_not_found_when_the_file_is_missing(): void
     {
-        $videoPath = storage_path('app/videos/gemini_generated_video_079d102d.mp4');
-
-        if (is_file($videoPath)) {
+        if ($this->heroVideoPath() !== null) {
             $this->markTestSkipped('The hero video exists locally.');
         }
 
         $this->get(route('hero.video'))->assertNotFound();
+    }
+
+    private function heroVideoPath(): ?string
+    {
+        foreach ([
+            public_path('video/gemini_generated_video_079d102d.mp4'),
+            storage_path('app/videos/gemini_generated_video_079d102d.mp4'),
+        ] as $path) {
+            if (is_file($path)) {
+                return $path;
+            }
+        }
+
+        return null;
     }
 }
