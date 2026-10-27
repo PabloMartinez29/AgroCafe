@@ -104,14 +104,43 @@ class WelcomeHeroTest extends TestCase
 
     public function test_the_hero_video_can_be_seeked_by_byte_range(): void
     {
-        $response = $this->withHeaders([
-            'Range' => 'bytes=0-99',
-        ])->get(route('hero.video'));
+        $videoPath = storage_path('app/videos/gemini_generated_video_079d102d.mp4');
+        $createdTemporaryVideo = false;
 
-        $size = filesize(storage_path('app/videos/gemini_generated_video_079d102d.mp4'));
+        if (! is_file($videoPath)) {
+            if (! is_dir(dirname($videoPath))) {
+                mkdir(dirname($videoPath), 0755, true);
+            }
 
-        $response->assertStatus(206);
-        $response->assertHeader('Accept-Ranges', 'bytes');
-        $response->assertHeader('Content-Range', 'bytes 0-99/'.$size);
+            file_put_contents($videoPath, str_repeat('0', 1024));
+            $createdTemporaryVideo = true;
+        }
+
+        try {
+            $response = $this->withHeaders([
+                'Range' => 'bytes=0-99',
+            ])->get(route('hero.video'));
+
+            $size = filesize($videoPath);
+
+            $response->assertStatus(206);
+            $response->assertHeader('Accept-Ranges', 'bytes');
+            $response->assertHeader('Content-Range', 'bytes 0-99/'.$size);
+        } finally {
+            if ($createdTemporaryVideo) {
+                unlink($videoPath);
+            }
+        }
+    }
+
+    public function test_the_hero_video_returns_not_found_when_the_file_is_missing(): void
+    {
+        $videoPath = storage_path('app/videos/gemini_generated_video_079d102d.mp4');
+
+        if (is_file($videoPath)) {
+            $this->markTestSkipped('The hero video exists locally.');
+        }
+
+        $this->get(route('hero.video'))->assertNotFound();
     }
 }
