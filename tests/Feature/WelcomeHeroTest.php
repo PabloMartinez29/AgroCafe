@@ -124,6 +124,13 @@ class WelcomeHeroTest extends TestCase
         $response->assertSee('id="recoleccion"', false);
         $response->assertSee('id="venta"', false);
         $response->assertDontSee('transform hover:-translate-y-2" data-reveal', false);
+        $response->assertSee('section-title-clip', false);
+        $response->assertSee('section-title text-4xl', false);
+        $response->assertSee('section-bar w-24', false);
+        $response->assertSee('section-line text-xl', false);
+        $response->assertSee("['.section-title', 'title']", false);
+        $response->assertSee("['.section-bar', 'bar']", false);
+        $response->assertSee("['.section-line', 'rise']", false);
     }
 
     public function test_the_platform_section_explains_what_agrocafe_is(): void
