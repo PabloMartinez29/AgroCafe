@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Services\ConsentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -28,7 +29,7 @@ class ProfileController extends Controller
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
         $user = $request->user();
-        
+
         // Actualizar datos básicos
         $user->fill($request->only(['name', 'email', 'phone', 'address']));
 
@@ -42,7 +43,7 @@ class ProfileController extends Controller
             if ($user->profile_image && Storage::disk('public')->exists($user->profile_image)) {
                 Storage::disk('public')->delete($user->profile_image);
             }
-            
+
             // Guardar nueva imagen
             $path = $request->file('profile_image')->store('profile-images', 'public');
             $user->profile_image = $path;
@@ -63,6 +64,8 @@ class ProfileController extends Controller
         ]);
 
         $user = $request->user();
+
+        app(ConsentService::class)->revokeAll($user, $request);
 
         Auth::logout();
 

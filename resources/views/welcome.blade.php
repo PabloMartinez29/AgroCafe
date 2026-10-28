@@ -199,6 +199,27 @@
         }
         .price-title-clip { overflow: hidden; padding-bottom: 0.15em; }
         .price-bar { transform-origin: left center; }
+        .is-hscroll .hscroll-sticky {
+            position: sticky;
+            top: 0;
+            min-height: 100vh;
+            min-height: 100svh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .is-hscroll .hscroll-viewport { overflow: hidden; padding: 1.25rem 0 2rem; }
+        .is-hscroll .hscroll-track {
+            display: flex;
+            width: max-content;
+            max-width: none;
+            margin: 0;
+            gap: 2rem;
+            padding-inline: max(1rem, calc((100vw - 80rem) / 2 + 1rem));
+            will-change: transform;
+        }
+        .is-hscroll .hscroll-track > article { flex: none; width: min(88vw, 26rem); }
+        .is-hscroll .hscroll-progress-track { display: block; }
         .price-row-featured { position: relative; overflow: hidden; }
         .price-row-featured::after {
             content: "";
@@ -255,7 +276,7 @@
                 class="hero-slide absolute inset-0 h-full w-full object-cover"
                 id="heroVideo"
                 preload="auto">
-                <source src="{{ asset('video/gemini_generated_video_079d102d.mp4') }}?v=4" type="video/mp4">
+                <source src="{{ route('hero.video') }}?v=5" type="video/mp4">
             </video>
             <img
                 id="heroImageTwo"
@@ -342,7 +363,7 @@
                             playsinline
                             preload="auto"
                             aria-hidden="true">
-                            <source src="{{ asset('video/gemini_generated_video_079d102d.mp4') }}?v=4" type="video/mp4">
+                            <source src="{{ route('hero.video') }}?v=5" type="video/mp4">
                         </video>
                         <img
                             id="heroPreviewTwo"
@@ -485,392 +506,272 @@
         </div>
     </section>
 
-    <!-- Módulos Principales -->
-    <section id="modulos" class="py-20 bg-gradient-to-b from-gray-50 to-white">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="text-center mb-12" data-reveal>
-                <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Módulos Principales</h2>
-                <div class="w-24 h-1 bg-coffee-600 mx-auto mb-6"></div>
-                <p class="text-xl text-gray-600">Sistema completo con todas las herramientas que necesitas</p>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Módulo 1: Gestión de Compras -->
-                <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-100 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2" data-reveal>
+    <!-- Consejos de cosecha y venta -->
+    <section id="consejos" class="bg-gradient-to-b from-gray-50 to-white">
+        <div class="max-w-7xl mx-auto px-4 text-center pt-20 pb-6">
+            <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Consejos para mejorar la cosecha y las ventas</h2>
+            <div class="w-24 h-1 bg-coffee-600 mx-auto mb-6"></div>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                Recomendaciones prácticas sobre recolección, beneficio, secado, almacenamiento y calidad del café.
+            </p>
+        </div>
+
+        <div data-hscroll>
+        <div class="hscroll-sticky py-6">
+            <div class="hscroll-viewport">
+            <div class="hscroll-track grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto px-4">
+                <article id="recoleccion" class="bg-white rounded-xl shadow-lg p-8 border border-gray-100 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
                     <div class="w-16 h-16 bg-green-100 rounded-xl flex items-center justify-center mb-6">
-                        <i class="fas fa-shopping-cart text-green-600 text-2xl"></i>
+                        <i class="fas fa-hand-holding text-green-600 text-2xl"></i>
                     </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Gestión de Compras</h3>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">¿Cuándo y cómo recolectar el café?</h3>
                     <p class="text-gray-600 mb-6 leading-relaxed">
-                        Registra y gestiona todas las compras de café a campesinos. Control total sobre precios, 
-                        cantidades y estados de transacción.
+                        La cereza madura es la que paga. Un fruto verde o pasado se convierte en pasilla y le baja el precio a toda la carga.
                     </p>
                     <ul class="space-y-2 text-gray-600">
-                        <li class="flex items-center">
-                            <i class="fas fa-check-circle text-green-500 mr-3"></i>
-                            <span>Registro detallado de compras</span>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                            <span>Coseche solo grano maduro, rojo o amarillo según la variedad. Deje el pintón para el siguiente pase.</span>
                         </li>
-                        <li class="flex items-center">
-                            <i class="fas fa-check-circle text-green-500 mr-3"></i>
-                            <span>Control de pagos a campesinos</span>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                            <span>No mezcle en el mismo costal cereza madura, verde, seca ni del suelo.</span>
                         </li>
-                        <li class="flex items-center">
-                            <i class="fas fa-check-circle text-green-500 mr-3"></i>
-                            <span>Generación automática de facturas</span>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                            <span>Despulpe el mismo día. Si el café cosechado pasa de 8 horas al sol, empieza a fermentar.</span>
                         </li>
-                        <li class="flex items-center">
-                            <i class="fas fa-check-circle text-green-500 mr-3"></i>
-                            <span>Historial completo de transacciones</span>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-green-500 mt-1"></i>
+                            <span>Repase el lote y recoja el fruto caído. Ahí se cría la broca y se pierde peso vendible.</span>
                         </li>
                     </ul>
-                </div>
+                </article>
 
-                <!-- Módulo 2: Gestión de Ventas -->
-                <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-100 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2" data-reveal>
+                <article id="beneficio" class="bg-white rounded-xl shadow-lg p-8 border border-gray-100 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
                     <div class="w-16 h-16 bg-purple-100 rounded-xl flex items-center justify-center mb-6">
-                        <i class="fas fa-handshake text-purple-600 text-2xl"></i>
+                        <i class="fas fa-tint text-purple-600 text-2xl"></i>
                     </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Gestión de Ventas</h3>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">¿Cómo beneficiar el café sin dañar la taza?</h3>
                     <p class="text-gray-600 mb-6 leading-relaxed">
-                        Administra las ventas a cooperativas y clientes. Control completo de inventario 
-                        y seguimiento de pagos en tiempo real.
+                        El beneficio define si el pergamino sale limpio o con sabor a vinagre. Un tanque sucio o una fermentación larga se nota el día de la compra.
                     </p>
                     <ul class="space-y-2 text-gray-600">
-                        <li class="flex items-center">
-                            <i class="fas fa-check-circle text-purple-500 mr-3"></i>
-                            <span>Ventas a cooperativas</span>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-purple-500 mt-1"></i>
+                            <span>Despulpe con la máquina calibrada y limpia. Un grano mordido se parte en el secado y lo clasifican como defecto.</span>
                         </li>
-                        <li class="flex items-center">
-                            <i class="fas fa-check-circle text-purple-500 mr-3"></i>
-                            <span>Control de inventario en tiempo real</span>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-purple-500 mt-1"></i>
+                            <span>Fermente en tanque lavado. En clima cálido suelen bastar 12 a 18 horas; en frío, hasta 24. Más tiempo saca sabor a fermento.</span>
                         </li>
-                        <li class="flex items-center">
-                            <i class="fas fa-check-circle text-purple-500 mr-3"></i>
-                            <span>Reportes y estadísticas avanzadas</span>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-purple-500 mt-1"></i>
+                            <span>Lave con agua limpia hasta quitar el mucílago. El agua sucia mancha el pergamino.</span>
                         </li>
-                        <li class="flex items-center">
-                            <i class="fas fa-check-circle text-purple-500 mr-3"></i>
-                            <span>Seguimiento de pagos pendientes</span>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-purple-500 mt-1"></i>
+                            <span>Separe flotes y pasilla desde el lavado. No los devuelva al café bueno.</span>
                         </li>
                     </ul>
-                </div>
+                </article>
 
-                <!-- Módulo 3: Control de Inventario -->
-                <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-100 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2" data-reveal>
+                <article id="secado" class="bg-white rounded-xl shadow-lg p-8 border border-gray-100 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+                    <div class="w-16 h-16 bg-amber-100 rounded-xl flex items-center justify-center mb-6">
+                        <i class="fas fa-sun text-amber-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">¿Cómo secar el café hasta el punto de venta?</h3>
+                    <p class="text-gray-600 mb-6 leading-relaxed">
+                        El pergamino seco se reconoce entre 10 % y 12 % de humedad. Más húmedo lo castigan en la báscula; demasiado seco se quiebra y también pierde.
+                    </p>
+                    <ul class="space-y-2 text-gray-600">
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-amber-500 mt-1"></i>
+                            <span>Tiéndalo en capa de 3 a 4 centímetros sobre marquesina, elba o patio limpio. Nunca sobre tierra.</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-amber-500 mt-1"></i>
+                            <span>Revuélvalo varias veces al día para que seque parejo y no se recuente.</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-amber-500 mt-1"></i>
+                            <span>Cúbralo si llueve. El café que se moja otra vez se mancha y vuelve a fermentar.</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-amber-500 mt-1"></i>
+                            <span>No lo seque junto a humo, estufa o combustible. Ese olor queda en la taza y se lo rechazan.</span>
+                        </li>
+                    </ul>
+                </article>
+
+                <article id="almacenamiento" class="bg-white rounded-xl shadow-lg p-8 border border-gray-100 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
                     <div class="w-16 h-16 bg-coffee-100 rounded-xl flex items-center justify-center mb-6">
                         <i class="fas fa-warehouse text-coffee-600 text-2xl"></i>
                     </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Control de Inventario</h3>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">¿Cómo almacenar el café para proteger su calidad antes de venderlo?</h3>
                     <p class="text-gray-600 mb-6 leading-relaxed">
-                        Gestiona tu bodega de manera inteligente. Control total sobre entradas, salidas, 
-                        ajustes y devoluciones.
+                        El café guardado en malas condiciones pierde taza, gana humedad y baja de precio. Guarde solo el que ya está seco.
                     </p>
                     <ul class="space-y-2 text-gray-600">
-                        <li class="flex items-center">
-                            <i class="fas fa-check-circle text-coffee-500 mr-3"></i>
-                            <span>Inventario en tiempo real</span>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-coffee-500 mt-1"></i>
+                            <span>Use una bodega seca, ventilada y sin goteras. El café va sobre estibas, nunca en el piso.</span>
                         </li>
-                        <li class="flex items-center">
-                            <i class="fas fa-check-circle text-coffee-500 mr-3"></i>
-                            <span>Movimientos de bodega detallados</span>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-coffee-500 mt-1"></i>
+                            <span>Empáquelo en sacos limpios. Aléjelo de abonos, venenos, gasolina, pintura y comida con olor fuerte: el grano absorbe los olores.</span>
                         </li>
-                        <li class="flex items-center">
-                            <i class="fas fa-check-circle text-coffee-500 mr-3"></i>
-                            <span>Reportes de stock automáticos</span>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-coffee-500 mt-1"></i>
+                            <span>Revise que no haya moho, gorgojo ni olor a reposo antes de salir a vender.</span>
                         </li>
-                        <li class="flex items-center">
-                            <i class="fas fa-check-circle text-coffee-500 mr-3"></i>
-                            <span>Alertas de stock bajo</span>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-coffee-500 mt-1"></i>
+                            <span>No almacene café húmedo “para después”. La espera con humedad alta se convierte en descuento.</span>
                         </li>
                     </ul>
-                </div>
+                </article>
 
-                <!-- Módulo 4: Análisis de Precios -->
-                <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-100 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2" data-reveal>
+                <article id="calidad" class="bg-white rounded-xl shadow-lg p-8 border border-gray-100 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
                     <div class="w-16 h-16 bg-blue-100 rounded-xl flex items-center justify-center mb-6">
-                        <i class="fas fa-chart-line text-blue-600 text-2xl"></i>
+                        <i class="fas fa-award text-blue-600 text-2xl"></i>
                     </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Análisis de Precios</h3>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">¿Qué calidad le pagan en la compra?</h3>
                     <p class="text-gray-600 mb-6 leading-relaxed">
-                        Monitorea los precios del café en tiempo real. Gráficas comparativas y análisis 
-                        histórico de precios por tipo de café.
+                        El precio no depende solo del día. También depende del factor de rendimiento, de la pasilla y de los defectos de taza.
                     </p>
                     <ul class="space-y-2 text-gray-600">
-                        <li class="flex items-center">
-                            <i class="fas fa-check-circle text-blue-500 mr-3"></i>
-                            <span>Gráficas en tiempo real</span>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-blue-500 mt-1"></i>
+                            <span>Menos broca, grano negro, vinagre y moho significan mejor factor y mejor pago por carga.</span>
                         </li>
-                        <li class="flex items-center">
-                            <i class="fas fa-check-circle text-blue-500 mr-3"></i>
-                            <span>Análisis histórico de precios</span>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-blue-500 mt-1"></i>
+                            <span>Separe la pasilla. Si la mezcla con el pergamino bueno, le descuentan toda la venta.</span>
                         </li>
-                        <li class="flex items-center">
-                            <i class="fas fa-check-circle text-blue-500 mr-3"></i>
-                            <span>Comparación entre tipos de café</span>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-blue-500 mt-1"></i>
+                            <span>Evite los defectos de taza: fermento, reposo, moho y fenol. Esos sabores generan rebaja o rechazo.</span>
                         </li>
-                        <li class="flex items-center">
-                            <i class="fas fa-check-circle text-blue-500 mr-3"></i>
-                            <span>Estadísticas y tendencias</span>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-blue-500 mt-1"></i>
+                            <span>Pese en báscula y, si tiene medidor, anote la humedad. Así llega a la venta con el dato claro.</span>
                         </li>
                     </ul>
-                </div>
+                </article>
 
-                <!-- Módulo 5: Gestión de Usuarios -->
-                <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-100 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2" data-reveal>
+                <article id="venta" class="bg-white rounded-xl shadow-lg p-8 border border-gray-100 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
                     <div class="w-16 h-16 bg-indigo-100 rounded-xl flex items-center justify-center mb-6">
-                        <i class="fas fa-users text-indigo-600 text-2xl"></i>
+                        <i class="fas fa-handshake text-indigo-600 text-2xl"></i>
                     </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Gestión de Usuarios</h3>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">¿Cómo vender según el precio del día?</h3>
                     <p class="text-gray-600 mb-6 leading-relaxed">
-                        Administra usuarios, roles y permisos. Control de acceso granular para garantizar 
-                        la seguridad de tu información.
+                        Verde, seco y pasilla no valen lo mismo. Conviene mirar el precio del mercado antes de salir de la finca.
                     </p>
                     <ul class="space-y-2 text-gray-600">
-                        <li class="flex items-center">
-                            <i class="fas fa-check-circle text-indigo-500 mr-3"></i>
-                            <span>Roles y permisos personalizados</span>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-indigo-500 mt-1"></i>
+                            <span>El seco es el precio de referencia por carga de 125 kilogramos. El verde y la pasilla se pagan por kilogramo.</span>
                         </li>
-                        <li class="flex items-center">
-                            <i class="fas fa-check-circle text-indigo-500 mr-3"></i>
-                            <span>Control de acceso por módulo</span>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-indigo-500 mt-1"></i>
+                            <span>Termine el secado antes de vender. El descuento por humedad casi siempre es mayor que el valor de esperar unos días.</span>
                         </li>
-                        <li class="flex items-center">
-                            <i class="fas fa-check-circle text-indigo-500 mr-3"></i>
-                            <span>Gestión de campesinos y cooperativas</span>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-indigo-500 mt-1"></i>
+                            <span>Compare el precio del punto de compra con el precio del día. Lleve el café limpio, seco y bien empacado.</span>
                         </li>
-                        <li class="flex items-center">
-                            <i class="fas fa-check-circle text-indigo-500 mr-3"></i>
-                            <span>Historial de actividades</span>
-                        </li>
-                    </ul>
-                </div>
-
-                <!-- Módulo 6: Reportes y Estadísticas -->
-                <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-100 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2" data-reveal>
-                    <div class="w-16 h-16 bg-amber-100 rounded-xl flex items-center justify-center mb-6">
-                        <i class="fas fa-chart-bar text-amber-600 text-2xl"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Reportes y Estadísticas</h3>
-                    <p class="text-gray-600 mb-6 leading-relaxed">
-                        Genera reportes detallados y visualiza estadísticas completas de tu negocio. 
-                        Toma decisiones basadas en datos.
-                    </p>
-                    <ul class="space-y-2 text-gray-600">
-                        <li class="flex items-center">
-                            <i class="fas fa-check-circle text-amber-500 mr-3"></i>
-                            <span>Reportes personalizables</span>
-                        </li>
-                        <li class="flex items-center">
-                            <i class="fas fa-check-circle text-amber-500 mr-3"></i>
-                            <span>Dashboard interactivo</span>
-                        </li>
-                        <li class="flex items-center">
-                            <i class="fas fa-check-circle text-amber-500 mr-3"></i>
-                            <span>Exportación a PDF y Excel</span>
-                        </li>
-                        <li class="flex items-center">
-                            <i class="fas fa-check-circle text-amber-500 mr-3"></i>
-                            <span>Análisis de rentabilidad</span>
+                        <li class="flex items-start gap-3">
+                            <i class="fas fa-check-circle text-indigo-500 mt-1"></i>
+                            <span>Anote fecha, kilos, tipo y precio de cada venta. Así sabe si le conviene vender hoy o esperar.</span>
                         </li>
                     </ul>
-                </div>
+                </article>
             </div>
+            </div>
+
+            <div class="hscroll-progress-track mx-auto mt-6 hidden h-1 w-48 overflow-hidden rounded-full bg-gray-200" aria-hidden="true">
+                <div class="hscroll-progress h-full w-full origin-left rounded-full bg-coffee-600" style="transform: scaleX(0)"></div>
+            </div>
+        </div>
         </div>
     </section>
 
-    <!-- Características Destacadas - Carrusel -->
-    <section id="caracteristicas" class="py-20 bg-gradient-to-b from-gray-50 to-white">
+    <!-- Acerca de la plataforma -->
+    <section id="plataforma" class="bg-white py-20">
         <div class="max-w-7xl mx-auto px-4">
-            <div class="text-center mb-12" data-reveal>
-                <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Características Destacadas</h2>
+            <div class="text-center mb-14" data-reveal>
+                <p class="mb-3 text-sm font-semibold uppercase tracking-widest text-coffee-600">Qué es AgroCafé</p>
+                <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Acerca de la plataforma</h2>
                 <div class="w-24 h-1 bg-coffee-600 mx-auto mb-6"></div>
-                <p class="text-xl text-gray-600">Tecnología y funcionalidades que hacen la diferencia</p>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Un sistema web para llevar el negocio del café en orden: desde la compra al campesino hasta la venta, con el precio del mercado siempre a la vista.
+                </p>
             </div>
 
-            <!-- Carrusel -->
-            <div class="relative" x-data="{ currentSlide: 0, slides: 6 }">
-                <!-- Slides -->
-                <div class="overflow-hidden rounded-xl">
-                    <div class="flex transition-transform duration-500 ease-in-out" 
-                         :style="`transform: translateX(-${currentSlide * 100}%)`">
-                        
-                        <!-- Slide 1: Interfaz Intuitiva -->
-                        <div class="min-w-full px-4">
-                            <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-100">
-                                <div class="text-center">
-                                    <div class="w-20 h-20 bg-coffee-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                                        <i class="fas fa-mouse-pointer text-coffee-600 text-3xl"></i>
-                                    </div>
-                                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Interfaz Intuitiva</h3>
-                                    <p class="text-gray-600 mb-6 leading-relaxed">
-                                        Diseño moderno y fácil de usar. Navega por el sistema sin complicaciones, 
-                                        con una experiencia de usuario optimizada para máxima productividad.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Slide 2: Seguridad Avanzada -->
-                        <div class="min-w-full px-4">
-                            <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-100">
-                                <div class="text-center">
-                                    <div class="w-20 h-20 bg-coffee-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                                        <i class="fas fa-shield-alt text-coffee-600 text-3xl"></i>
-                                    </div>
-                                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Seguridad Avanzada</h3>
-                                    <p class="text-gray-600 mb-6 leading-relaxed">
-                                        Protección de datos de nivel empresarial. Sistema robusto con encriptación, 
-                                        control de acceso granular y respaldo automático de información.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Slide 3: Acceso Multiplataforma -->
-                        <div class="min-w-full px-4">
-                            <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-100">
-                                <div class="text-center">
-                                    <div class="w-20 h-20 bg-coffee-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                                        <i class="fas fa-mobile-alt text-coffee-600 text-3xl"></i>
-                                    </div>
-                                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Acceso Multiplataforma</h3>
-                                    <p class="text-gray-600 mb-6 leading-relaxed">
-                                        Accede desde cualquier dispositivo. Sistema web responsive y API REST para 
-                                        integración con aplicaciones móviles Flutter.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Slide 4: Tiempo Real -->
-                        <div class="min-w-full px-4">
-                            <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-100">
-                                <div class="text-center">
-                                    <div class="w-20 h-20 bg-coffee-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                                        <i class="fas fa-sync-alt text-coffee-600 text-3xl"></i>
-                                    </div>
-                                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Tiempo Real</h3>
-                                    <p class="text-gray-600 mb-6 leading-relaxed">
-                                        Datos actualizados al instante. Gráficas, reportes e inventario se actualizan 
-                                        automáticamente sin necesidad de recargar la página.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Slide 5: Soporte Técnico -->
-                        <div class="min-w-full px-4">
-                            <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-100">
-                                <div class="text-center">
-                                    <div class="w-20 h-20 bg-coffee-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                                        <i class="fas fa-headset text-coffee-600 text-3xl"></i>
-                                    </div>
-                                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Soporte Técnico</h3>
-                                    <p class="text-gray-600 mb-6 leading-relaxed">
-                                        Equipo de soporte dedicado. Asistencia técnica profesional para resolver 
-                                        cualquier duda o inconveniente de manera rápida y eficiente.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Slide 6: Escalabilidad -->
-                        <div class="min-w-full px-4">
-                            <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-100">
-                                <div class="text-center">
-                                    <div class="w-20 h-20 bg-coffee-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                                        <i class="fas fa-chart-line text-coffee-600 text-3xl"></i>
-                                    </div>
-                                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Escalabilidad</h3>
-                                    <p class="text-gray-600 mb-6 leading-relaxed">
-                                        Crece con tu negocio. Sistema diseñado para adaptarse desde pequeños 
-                                        productores hasta grandes cooperativas cafeteras.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+            <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
+                <article class="rounded-2xl border border-gray-100 bg-gray-50 p-8" data-reveal>
+                    <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-coffee-600 text-white">
+                        <i class="fas fa-seedling text-xl"></i>
                     </div>
-                </div>
+                    <h3 class="mb-3 text-2xl font-bold text-gray-900">¿Qué es AgroCafé?</h3>
+                    <p class="leading-relaxed text-gray-600">
+                        AgroCafé es un sistema de gestión para la compra, venta e inventario de café. Reúne en un solo lugar la caja, las compras a campesinos, la bodega, las facturas, los pagos y las ventas.
+                    </p>
+                    <p class="mt-4 leading-relaxed text-gray-600">
+                        Tiene un panel para el administrador y otro para el campesino, y una API para conectar una aplicación móvil al mismo sistema. Cuenta con 10 módulos y con soporte de lunes a viernes, de 8:00 AM a 6:00 PM, en <a href="mailto:contacto@agrocafe.com" class="font-semibold text-coffee-600 underline">contacto@agrocafe.com</a>.
+                    </p>
+                </article>
 
-                <!-- Controles del Carrusel -->
-                <div class="flex items-center justify-center mt-8 space-x-4">
-                    <button 
-                        @click="currentSlide = (currentSlide - 1 + slides) % slides"
-                        class="w-12 h-12 bg-coffee-600 text-white rounded-full hover:bg-coffee-700 transition-colors flex items-center justify-center shadow-lg">
-                        <i class="fas fa-chevron-left"></i>
-                    </button>
-                    
-                    <!-- Indicadores -->
-                    <div class="flex space-x-2">
-                        <button 
-                            @click="currentSlide = 0"
-                            class="w-3 h-3 rounded-full transition-all"
-                            :class="currentSlide === 0 ? 'bg-coffee-600 w-8' : 'bg-gray-300'">
-                        </button>
-                        <button 
-                            @click="currentSlide = 1"
-                            class="w-3 h-3 rounded-full transition-all"
-                            :class="currentSlide === 1 ? 'bg-coffee-600 w-8' : 'bg-gray-300'">
-                        </button>
-                        <button 
-                            @click="currentSlide = 2"
-                            class="w-3 h-3 rounded-full transition-all"
-                            :class="currentSlide === 2 ? 'bg-coffee-600 w-8' : 'bg-gray-300'">
-                        </button>
-                        <button 
-                            @click="currentSlide = 3"
-                            class="w-3 h-3 rounded-full transition-all"
-                            :class="currentSlide === 3 ? 'bg-coffee-600 w-8' : 'bg-gray-300'">
-                        </button>
-                        <button 
-                            @click="currentSlide = 4"
-                            class="w-3 h-3 rounded-full transition-all"
-                            :class="currentSlide === 4 ? 'bg-coffee-600 w-8' : 'bg-gray-300'">
-                        </button>
-                        <button 
-                            @click="currentSlide = 5"
-                            class="w-3 h-3 rounded-full transition-all"
-                            :class="currentSlide === 5 ? 'bg-coffee-600 w-8' : 'bg-gray-300'">
-                        </button>
+                <article class="rounded-2xl border border-gray-100 bg-gray-50 p-8" data-reveal>
+                    <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-coffee-600 text-white">
+                        <i class="fas fa-bullseye text-xl"></i>
                     </div>
-
-                    <button 
-                        @click="currentSlide = (currentSlide + 1) % slides"
-                        class="w-12 h-12 bg-coffee-600 text-white rounded-full hover:bg-coffee-700 transition-colors flex items-center justify-center shadow-lg">
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
-                </div>
+                    <h3 class="mb-3 text-2xl font-bold text-gray-900">¿Con qué fin se hizo?</h3>
+                    <p class="leading-relaxed text-gray-600">
+                        Se hizo para que el negocio cafetero deje de depender de cuadernos y hojas sueltas. Busca que cada compra, pago y factura quede registrada y que la bodega cuadre con lo que se compra y se vende.
+                    </p>
+                    <p class="mt-4 leading-relaxed text-gray-600">
+                        También busca que el campesino pueda comprobar lo que le pagaron, con el mismo precio que publica la Federación Nacional de Cafeteros.
+                    </p>
+                </article>
             </div>
-        </div>
-    </section>
 
-    <!-- Sección de Beneficios -->
-    <section class="py-20 bg-white">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="text-center p-6">
-                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-mobile-alt text-blue-600 text-2xl"></i>
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-2">Aplicación Móvil</h3>
-                    <p class="text-gray-600">Accede desde cualquier dispositivo con nuestra API para Flutter</p>
-                </div>
+            <div class="mt-16 text-center" data-reveal>
+                <h3 class="text-3xl font-bold text-gray-900">¿Qué impacto tiene?</h3>
+                <div class="mx-auto mt-4 h-1 w-16 bg-coffee-600"></div>
+            </div>
 
-                <div class="text-center p-6">
-                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-chart-line text-green-600 text-2xl"></i>
+            <div class="mt-10 grid grid-cols-1 gap-6 md:grid-cols-3">
+                <article class="rounded-2xl border border-gray-100 bg-white p-7 shadow-lg" data-reveal>
+                    <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+                        <i class="fas fa-list-check text-green-600"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-2">Reportes en Tiempo Real</h3>
-                    <p class="text-gray-600">Visualiza estadísticas y reportes actualizados al instante</p>
-                </div>
+                    <h4 class="mb-2 text-xl font-bold text-gray-900">Orden y menos errores</h4>
+                    <p class="leading-relaxed text-gray-600">
+                        Compras, pagos, bodega, caja y facturas trabajan sobre los mismos datos. No hay que repetir registros ni sumar a mano.
+                    </p>
+                </article>
 
-                <div class="text-center p-6">
-                    <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-shield-alt text-yellow-600 text-2xl"></i>
+                <article class="rounded-2xl border border-gray-100 bg-white p-7 shadow-lg" data-reveal>
+                    <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+                        <i class="fas fa-handshake text-blue-600"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-2">Seguro y Confiable</h3>
-                    <p class="text-gray-600">Sistema robusto con control de acceso y respaldo de datos</p>
-                </div>
+                    <h4 class="mb-2 text-xl font-bold text-gray-900">Confianza con el campesino</h4>
+                    <p class="leading-relaxed text-gray-600">
+                        Cada productor ve sus propias compras y facturas, y puede descargar el PDF de cada una cuando lo necesite.
+                    </p>
+                </article>
+
+                <article class="rounded-2xl border border-gray-100 bg-white p-7 shadow-lg" data-reveal>
+                    <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-yellow-100">
+                        <i class="fas fa-chart-line text-yellow-600"></i>
+                    </div>
+                    <h4 class="mb-2 text-xl font-bold text-gray-900">Mejores decisiones</h4>
+                    <p class="leading-relaxed text-gray-600">
+                        El precio del día del café verde, seco y pasilla, junto con el análisis de precios, ayuda a decidir cuándo comprar y cuándo vender.
+                    </p>
+                </article>
             </div>
         </div>
     </section>
@@ -879,7 +780,7 @@
     <footer class="bg-gradient-to-b from-coffee-800 via-coffee-700 to-coffee-900 text-white">
         <!-- Sección Principal del Footer -->
         <div class="max-w-7xl mx-auto px-4 py-16">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+            <div class="mx-auto grid max-w-5xl grid-cols-1 gap-12 md:grid-cols-2 md:gap-24">
                 <!-- Información de la Empresa -->
                 <div class="lg:col-span-1">
                     <div class="flex items-center space-x-3 mb-6">
@@ -920,82 +821,6 @@
                             <i class="fab fa-linkedin-in text-white"></i>
                         </a>
                     </div>
-                </div>
-
-                <!-- Enlaces Rápidos -->
-                <div>
-                    <h4 class="text-lg font-bold text-white mb-6 pb-2 border-b border-white/20">Enlaces Rápidos</h4>
-                    <ul class="space-y-3">
-                        <li>
-                            <a href="{{ route('login') }}" class="text-white/90 hover:text-white transition-colors flex items-center group">
-                                <i class="fas fa-chevron-right text-xs mr-2 group-hover:translate-x-1 transition-transform"></i>
-                                Iniciar Sesión
-                            </a>
-                        </li>
-                        @if (Route::has('register'))
-                            <li>
-                                <a href="{{ route('register') }}" class="text-white/90 hover:text-white transition-colors flex items-center group">
-                                    <i class="fas fa-chevron-right text-xs mr-2 group-hover:translate-x-1 transition-transform"></i>
-                                    Registrarse
-                                </a>
-                            </li>
-                        @endif
-                        <li>
-                            <a href="#acerca-de" class="text-white/90 hover:text-white transition-colors flex items-center group">
-                                <i class="fas fa-chevron-right text-xs mr-2 group-hover:translate-x-1 transition-transform"></i>
-                                Precios actuales
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#modulos" class="text-white/90 hover:text-white transition-colors flex items-center group">
-                                <i class="fas fa-chevron-right text-xs mr-2 group-hover:translate-x-1 transition-transform"></i>
-                                Módulos
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#caracteristicas" class="text-white/90 hover:text-white transition-colors flex items-center group">
-                                <i class="fas fa-chevron-right text-xs mr-2 group-hover:translate-x-1 transition-transform"></i>
-                                Características
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-
-                <!-- Módulos -->
-                <div>
-                    <h4 class="text-lg font-bold text-white mb-6 pb-2 border-b border-white/20">Módulos</h4>
-                    <ul class="space-y-3">
-                        <li>
-                            <a href="#modulos" class="text-white/90 hover:text-white transition-colors flex items-center group">
-                                <i class="fas fa-shopping-cart text-xs mr-2"></i>
-                                Compras
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#modulos" class="text-white/90 hover:text-white transition-colors flex items-center group">
-                                <i class="fas fa-handshake text-xs mr-2"></i>
-                                Ventas
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#modulos" class="text-white/90 hover:text-white transition-colors flex items-center group">
-                                <i class="fas fa-warehouse text-xs mr-2"></i>
-                                Inventario
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#modulos" class="text-white/90 hover:text-white transition-colors flex items-center group">
-                                <i class="fas fa-chart-line text-xs mr-2"></i>
-                                Análisis de Precios
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#modulos" class="text-white/90 hover:text-white transition-colors flex items-center group">
-                                <i class="fas fa-chart-bar text-xs mr-2"></i>
-                                Reportes
-                            </a>
-                        </li>
-                    </ul>
                 </div>
 
                 <!-- Contacto -->
@@ -1047,11 +872,15 @@
                         © {{ date('Y') }} <span class="text-white font-semibold">AgroCafé</span>. Todos los derechos reservados.
                     </p>
                     <div class="flex flex-wrap items-center gap-6 text-sm text-white/90">
-                        <a href="#" class="hover:text-white transition-colors">Política de Privacidad</a>
+                        <a href="{{ route('legal.privacy') }}" class="hover:text-white transition-colors">Política de Privacidad</a>
                         <span class="text-white/50">|</span>
-                        <a href="#" class="hover:text-white transition-colors">Términos de Servicio</a>
+                        <a href="{{ route('legal.terms') }}" class="hover:text-white transition-colors">Términos y Condiciones</a>
                         <span class="text-white/50">|</span>
-                        <a href="#" class="hover:text-white transition-colors">Soporte</a>
+                        <a href="{{ route('legal.cookies') }}" class="hover:text-white transition-colors">Cookies</a>
+                        <span class="text-white/50">|</span>
+                        <a href="{{ route('legal.refund') }}" class="hover:text-white transition-colors">Reembolsos</a>
+                        <span class="text-white/50">|</span>
+                        <a href="mailto:contacto@agrocafe.com" class="hover:text-white transition-colors">Soporte</a>
                     </div>
                 </div>
             </div>
@@ -1085,6 +914,10 @@
             const imageTwo = document.getElementById('heroImageTwo');
             const slides = [imageOne, video, imageTwo];
             const imageHoldMs = 5000;
+            const firstImageHoldMs = 3000;
+            const holdFor = function (index) {
+                return index === 0 ? firstImageHoldMs : imageHoldMs;
+            };
             let currentSlide = 0;
             let imageTimer = 0;
             let slideStarted = Date.now();
@@ -1104,7 +937,7 @@
                     return;
                 }
 
-                let amount = Math.min(100, ((Date.now() - slideStarted) / imageHoldMs) * 100);
+                let amount = Math.min(100, ((Date.now() - slideStarted) / holdFor(currentSlide)) * 100);
 
                 if (currentSlide === 1 && video && Number.isFinite(video.duration) && video.duration > 0) {
                     amount = Math.min(100, (video.currentTime / video.duration) * 100);
@@ -1229,7 +1062,7 @@
 
                 imageTimer = window.setTimeout(function () {
                     showSlide((index + 1) % slides.length);
-                }, imageHoldMs);
+                }, holdFor(index));
             }
 
             silence(video);
@@ -1264,7 +1097,12 @@
                         e.preventDefault();
                         const target = document.querySelector(href);
                         if (target) {
-                            const offsetTop = target.getBoundingClientRect().top + window.scrollY;
+                            const hscrollTarget = target.closest('[data-hscroll]') && target.tagName === 'ARTICLE' && window.hscrollScrollFor
+                                ? window.hscrollScrollFor(target)
+                                : null;
+                            const offsetTop = hscrollTarget !== null
+                                ? hscrollTarget
+                                : target.getBoundingClientRect().top + window.scrollY;
                             window.scrollTo({
                                 top: offsetTop,
                                 behavior: 'smooth'
@@ -1330,8 +1168,6 @@
             };
 
             const extraRevealTargets = [
-                '[x-data*="currentSlide"]',
-                'section.bg-white > div > .grid > *',
                 'footer .grid > *',
             ];
 
@@ -1490,6 +1326,88 @@
                 paintScrub();
             }
 
+            const hscrollSection = document.querySelector('[data-hscroll]');
+            let hscrollState = null;
+
+            if (hscrollSection && !reduceMotion) {
+                const hscrollSticky = hscrollSection.querySelector('.hscroll-sticky');
+                const hscrollViewport = hscrollSection.querySelector('.hscroll-viewport');
+                const hscrollTrack = hscrollSection.querySelector('.hscroll-track');
+                const hscrollBar = hscrollSection.querySelector('.hscroll-progress');
+
+                hscrollSection.classList.add('is-hscroll');
+
+                const measureHscroll = function () {
+                    hscrollSection.style.height = '';
+                    hscrollSticky.style.top = '';
+
+                    const stickyHeight = hscrollSticky.offsetHeight;
+                    const stickyTop = Math.min(0, window.innerHeight - stickyHeight);
+                    const maxShift = Math.max(0, hscrollTrack.scrollWidth - hscrollViewport.clientWidth);
+
+                    hscrollSticky.style.top = stickyTop + 'px';
+                    hscrollSection.style.height = (stickyHeight + maxShift) + 'px';
+                    hscrollState = { stickyTop: stickyTop, maxShift: maxShift };
+                };
+
+                const paintHscroll = function () {
+                    if (!hscrollState) {
+                        return;
+                    }
+
+                    const rect = hscrollSection.getBoundingClientRect();
+                    const progress = hscrollState.maxShift > 0
+                        ? clamp01((hscrollState.stickyTop - rect.top) / hscrollState.maxShift)
+                        : 0;
+
+                    hscrollTrack.style.transform = 'translate3d(' + (-progress * hscrollState.maxShift).toFixed(1) + 'px, 0, 0)';
+
+                    if (hscrollBar) {
+                        hscrollBar.style.transform = 'scaleX(' + progress.toFixed(3) + ')';
+                    }
+                };
+
+                let hscrollTicking = false;
+                const requestHscroll = function () {
+                    if (!hscrollTicking) {
+                        hscrollTicking = true;
+                        window.requestAnimationFrame(function () {
+                            hscrollTicking = false;
+                            paintHscroll();
+                        });
+                    }
+                };
+
+                const remeasureHscroll = function () {
+                    measureHscroll();
+                    paintHscroll();
+                };
+
+                window.hscrollScrollFor = function (element) {
+                    if (!hscrollState || hscrollState.maxShift <= 0) {
+                        return null;
+                    }
+
+                    const trackLeft = hscrollTrack.getBoundingClientRect().left;
+                    const left = element.getBoundingClientRect().left - trackLeft;
+                    const padding = Math.max(16, (window.innerWidth - 1280) / 2 + 16);
+                    const shift = Math.min(Math.max(left - padding, 0), hscrollState.maxShift);
+                    const sectionTop = hscrollSection.getBoundingClientRect().top + window.scrollY;
+
+                    return sectionTop - hscrollState.stickyTop + shift;
+                };
+
+                window.addEventListener('scroll', requestHscroll, { passive: true });
+                window.addEventListener('resize', remeasureHscroll);
+                window.addEventListener('load', remeasureHscroll);
+
+                if (document.fonts && document.fonts.ready) {
+                    document.fonts.ready.then(remeasureHscroll);
+                }
+
+                remeasureHscroll();
+            }
+
             const paintMarketPrices = function (data) {
                 const status = document.getElementById('marketPriceStatus');
                 const note = document.getElementById('marketPriceNote');
@@ -1567,20 +1485,9 @@
                     refreshMarketPrices();
                 }
             });
-
-            // Auto-play del carrusel de características
-            setInterval(() => {
-                if (window.Alpine) {
-                    const carouselElement = document.querySelector('[x-data*="currentSlide"]');
-                    if (carouselElement) {
-                        const data = Alpine.$data(carouselElement);
-                        if (data && data.slides) {
-                            data.currentSlide = (data.currentSlide + 1) % data.slides;
-                        }
-                    }
-                }
-            }, 5000);
         });
     </script>
+
+    <x-cookie-notice />
     </body>
 </html>

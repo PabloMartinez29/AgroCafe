@@ -3,12 +3,17 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\ConsentRecord;
 use App\Models\Cooperative;
+use App\Services\ConsentService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 
 class CooperativeController extends Controller
 {
+    public function __construct(private ConsentService $consents) {}
+
     public function index(Request $request)
     {
         $query = Cooperative::query();
@@ -32,7 +37,7 @@ class CooperativeController extends Controller
      */
     public function store(Request $request)
     {
-        if (!Auth::user()->isAdmin()) {
+        if (! Auth::user()->isAdmin()) {
             return response()->json(['message' => 'No autorizado'], 403);
         }
 
@@ -44,9 +49,12 @@ class CooperativeController extends Controller
             'address' => 'nullable|string',
             'legal_representative' => 'nullable|string|max:100',
             'active' => 'boolean',
-        ]);
+            ...$this->consents->validationRules(),
+        ], $this->consents->validationMessages());
 
-        $cooperative = Cooperative::create($validated);
+        $cooperative = Cooperative::create(Arr::except($validated, ['accept_terms', 'accept_privacy']));
+
+        $this->consents->record($cooperative, $request, ConsentRecord::CHANNEL_ADMIN_ASSISTED, $request->user());
 
         return response()->json($cooperative, 201);
     }
@@ -56,13 +64,13 @@ class CooperativeController extends Controller
      */
     public function update(Request $request, Cooperative $cooperative)
     {
-        if (!Auth::user()->isAdmin()) {
+        if (! Auth::user()->isAdmin()) {
             return response()->json(['message' => 'No autorizado'], 403);
         }
 
         $validated = $request->validate([
             'name' => 'required|string|max:150',
-            'nit' => ['required', 'string', 'max:20', 'unique:cooperatives,nit,' . $cooperative->id],
+            'nit' => ['required', 'string', 'max:20', 'unique:cooperatives,nit,'.$cooperative->id],
             'phone' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:100',
             'address' => 'nullable|string',
@@ -80,7 +88,7 @@ class CooperativeController extends Controller
      */
     public function destroy(Cooperative $cooperative)
     {
-        if (!Auth::user()->isAdmin()) {
+        if (! Auth::user()->isAdmin()) {
             return response()->json(['message' => 'No autorizado'], 403);
         }
 
@@ -88,9 +96,10 @@ class CooperativeController extends Controller
         if ($cooperative->sales()->count() > 0) {
             // Desactivar en lugar de eliminar
             $cooperative->update(['active' => false]);
+
             return response()->json([
                 'message' => 'Cooperativa desactivada (tiene ventas relacionadas)',
-                'cooperative' => $cooperative
+                'cooperative' => $cooperative,
             ]);
         }
 
@@ -99,4 +108,3 @@ class CooperativeController extends Controller
         return response()->json(['message' => 'Cooperativa eliminada exitosamente']);
     }
 }
-
