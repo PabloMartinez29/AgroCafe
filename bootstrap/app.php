@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
             'peasant' => \App\Http\Middleware\EnsureUserIsPeasant::class,
             'active' => \App\Http\Middleware\EnsureUserIsActive::class,
+            'consent' => \App\Http\Middleware\EnsureConsentsAccepted::class,
         ]);
 
         // Configurar CORS para permitir peticiones desde la app móvil

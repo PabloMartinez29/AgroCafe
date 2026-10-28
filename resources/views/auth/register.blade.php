@@ -154,52 +154,6 @@
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
-                                <!-- Phone Field -->
-                                <div class="space-y-2 animate-slide-up" style="animation-delay: 0.25s;">
-                                    <label for="phone" class="block text-sm font-bold text-gray-700">
-                                        <i class="fas fa-phone text-coffee-600 mr-2"></i>
-                                        Teléfono
-                                    </label>
-                                    <div class="relative group">
-                                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                            <i class="fas fa-phone text-gray-400 group-focus-within:text-coffee-600 transition-colors duration-300"></i>
-                                        </div>
-                                        <input 
-                                            id="phone" 
-                                            name="phone" 
-                                            type="tel" 
-                                            value="{{ old('phone') }}" 
-                                            required 
-                                            autocomplete="tel"
-                                            class="block w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-coffee-500 focus:border-coffee-500 transition-all duration-300 bg-gray-50 focus:bg-white transform focus:scale-[1.02]"
-                                            placeholder="+57 300 123 4567"
-                                        />
-                                    </div>
-                                    <x-input-error :messages="$errors->get('phone')" class="mt-2" />
-                                </div>
-
-                                <!-- Address Field -->
-                                <div class="space-y-2 animate-slide-up" style="animation-delay: 0.3s;">
-                                    <label for="address" class="block text-sm font-bold text-gray-700">
-                                        <i class="fas fa-map-marker-alt text-coffee-600 mr-2"></i>
-                                        Dirección
-                                    </label>
-                                    <div class="relative group">
-                                        <div class="absolute inset-y-0 left-0 pl-4 pt-4 flex items-start pointer-events-none">
-                                            <i class="fas fa-map-marker-alt text-gray-400 group-focus-within:text-coffee-600 transition-colors duration-300"></i>
-                                        </div>
-                                        <textarea 
-                                            id="address" 
-                                            name="address" 
-                                            required 
-                                            rows="3"
-                                            class="block w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-coffee-500 focus:border-coffee-500 transition-all duration-300 bg-gray-50 focus:bg-white transform focus:scale-[1.02] resize-none"
-                                            placeholder="Calle, número, ciudad, departamento"
-                                        >{{ old('address') }}</textarea>
-                                    </div>
-                                    <x-input-error :messages="$errors->get('address')" class="mt-2" />
-                                </div>
-
                                 <!-- Password Field -->
                                 <div class="space-y-2 animate-slide-up" style="animation-delay: 0.35s;">
                                     <label for="password" class="block text-sm font-bold text-gray-700">
@@ -261,6 +215,9 @@
                                     </div>
             <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
         </div>
+
+                                <!-- Legal consent (two separate checkboxes) -->
+                                <x-consent-checkboxes />
 
                                 <!-- Submit Button -->
                                 <div class="pt-2 animate-slide-up" style="animation-delay: 0.5s;">

@@ -28,5 +28,7 @@
     </head>
     <body class="font-sans text-gray-900 antialiased">
         {{ $slot }}
+
+        <x-cookie-notice />
     </body>
 </html>

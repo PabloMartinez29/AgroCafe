@@ -11,7 +11,7 @@ class WelcomeHeroTest extends TestCase
         $response = $this->get('/');
 
         $response->assertOk();
-        $response->assertSee('video/gemini_generated_video_079d102d.mp4', false);
+        $response->assertSee(route('hero.video'), false);
         $response->assertDontSee('Explora el café', false);
         $response->assertDontSee('como nunca antes.', false);
         $response->assertSee('data-phrase="El arte del café, nacido en nuestra tierra."', false);
@@ -57,10 +57,11 @@ class WelcomeHeroTest extends TestCase
         $response->assertSee('id="heroPreview"', false);
         $response->assertSee('loop', false);
         $response->assertSee('id="heroBrand"', false);
+        $response->assertSee('const firstImageHoldMs = 3000;', false);
+        $response->assertSee('holdFor(currentSlide)', false);
         $response->assertSee('id="heroStage" class="sticky top-0 z-0', false);
         $response->assertSee('id="pageContent" class="relative z-10', false);
         $response->assertSee('Regístrate', false);
-        $response->assertSee('Registrarse', false);
         $response->assertDontSee('id="navbar"', false);
         $response->assertSee('id="heroMarkAgro"', false);
         $response->assertSee('>AGRO</p>', false);
@@ -73,6 +74,11 @@ class WelcomeHeroTest extends TestCase
         $response->assertDontSee('data-fade-end', false);
         $response->assertDontSee('updateHeroMark', false);
         $response->assertDontSee('coffee-hero.mp4', false);
+        $response->assertSee('Consejos para mejorar la cosecha y las ventas', false);
+        $response->assertSee('¿Cómo almacenar el café para proteger su calidad antes de venderlo?', false);
+        $response->assertSee('Recomendaciones prácticas sobre recolección, beneficio, secado, almacenamiento y calidad del café.', false);
+        $response->assertDontSee('Módulos Principales', false);
+        $response->assertDontSee('Gestión de Compras', false);
         $response->assertDontSee('typing-text', false);
     }
 
@@ -100,6 +106,59 @@ class WelcomeHeroTest extends TestCase
         $response->assertSee('countUpPrice', false);
         $response->assertSee('prefers-reduced-motion: reduce', false);
         $response->assertSee('Lista de precios', false);
+    }
+
+    public function test_the_tips_section_scrolls_horizontally_while_scrolling_down(): void
+    {
+        $response = $this->get('/');
+
+        $response->assertOk();
+        $response->assertSee('id="consejos"', false);
+        $response->assertSee('data-hscroll', false);
+        $response->assertSee('hscroll-sticky', false);
+        $response->assertSee('hscroll-viewport', false);
+        $response->assertSee('hscroll-track', false);
+        $response->assertSee('hscroll-progress', false);
+        $response->assertSee('paintHscroll', false);
+        $response->assertSee('window.hscrollScrollFor', false);
+        $response->assertSee('id="recoleccion"', false);
+        $response->assertSee('id="venta"', false);
+        $response->assertDontSee('transform hover:-translate-y-2" data-reveal', false);
+    }
+
+    public function test_the_platform_section_explains_what_agrocafe_is(): void
+    {
+        $response = $this->get('/');
+
+        $response->assertOk();
+        $response->assertSee('id="plataforma"', false);
+        $response->assertSee('Acerca de la plataforma', false);
+        $response->assertSee('¿Qué es AgroCafé?', false);
+        $response->assertSee('¿Con qué fin se hizo?', false);
+        $response->assertSee('¿Qué impacto tiene?', false);
+        $response->assertSee('Cuenta con 10 módulos', false);
+        $response->assertSee('soporte de lunes a viernes', false);
+        $response->assertSee('mailto:contacto@agrocafe.com', false);
+        $response->assertDontSee('data-count-to', false);
+        $response->assertDontSee('Los 10 módulos', false);
+        $response->assertDontSee('id="soporte"', false);
+        $response->assertDontSee('Tiene soporte', false);
+        $response->assertDontSee('fa-headset', false);
+        $response->assertDontSee('Características Destacadas', false);
+        $response->assertDontSee('id="caracteristicas"', false);
+        $response->assertDontSee('Aplicación Móvil', false);
+        $response->assertDontSee('currentSlide = (currentSlide + 1)', false);
+    }
+
+    public function test_the_footer_only_shows_the_brand_and_contact_columns(): void
+    {
+        $response = $this->get('/');
+
+        $response->assertOk();
+        $response->assertSeeInOrder(['<footer', 'AgroCafé', 'Contacto', 'contacto@agrocafe.com', '+57 300 123 4567'], false);
+        $response->assertDontSee('Enlaces Rápidos', false);
+        $response->assertDontSee('Iniciar Sesión', false);
+        $response->assertDontSee('Acerca de la plataforma</a>', false);
     }
 
     public function test_the_hero_video_can_be_seeked_by_byte_range(): void

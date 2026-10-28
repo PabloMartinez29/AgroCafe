@@ -3,16 +3,22 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ConsentRecord;
 use App\Models\User;
+use App\Services\ConsentService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
+    public function __construct(private ConsentService $consents) {}
+
     public function index()
     {
         $users = User::orderBy('created_at', 'desc')->get();
+
         return view('admin.users.index', compact('users'));
     }
 
@@ -30,15 +36,18 @@ class UserController extends Controller
             'address' => 'nullable|string',
             'password' => 'required|string|min:8|confirmed',
             'role' => ['required', Rule::in(['admin', 'peasant'])],
-        ]);
+            ...$this->consents->validationRules(),
+        ], $this->consents->validationMessages());
 
         $validated['password'] = Hash::make($validated['password']);
         $validated['active'] = $request->has('active') ? true : false;
 
-        User::create($validated);
+        $user = User::create(Arr::except($validated, ['accept_terms', 'accept_privacy']));
+
+        $this->consents->record($user, $request, ConsentRecord::CHANNEL_ADMIN_ASSISTED, $request->user());
 
         return redirect()->route('admin.users.index')
-            ->with('success', 'Usuario creado exitosamente.');
+            ->with('success', 'Usuario creado exitosamente. Deberá aceptar los términos y la política de privacidad la primera vez que ingrese.');
     }
 
     public function show(User $user)
@@ -93,4 +102,3 @@ class UserController extends Controller
             ->with('success', 'Usuario activado exitosamente.');
     }
 }
-

@@ -91,6 +91,13 @@
                             Cooperativa activa
                         </label>
                     </div>
+
+                    <div class="md:col-span-2">
+                        <p class="mb-3 text-sm text-gray-600">
+                            Confirma estas casillas solo si el representante legal de la cooperativa fue informado y autorizó el uso de sus datos.
+                        </p>
+                        <x-consent-checkboxes :assisted="true" />
+                    </div>
                 </div>
 
                 <!-- Botones de acción -->

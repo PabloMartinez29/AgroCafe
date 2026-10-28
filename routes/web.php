@@ -12,7 +12,9 @@ use App\Http\Controllers\Admin\SaleController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\WarehouseController;
 use App\Http\Controllers\CoffeeMarketPriceController;
+use App\Http\Controllers\ConsentController;
 use App\Http\Controllers\HeroVideoController;
+use App\Http\Controllers\LegalController;
 use App\Http\Controllers\Peasant\DashboardController as PeasantDashboardController;
 use App\Http\Controllers\Peasant\InvoiceController as PeasantInvoiceController;
 use App\Http\Controllers\Peasant\PriceAnalysisController as PeasantPriceAnalysisController;
@@ -26,8 +28,20 @@ Route::get('/', function () {
 
 Route::get('/precios-mercado', CoffeeMarketPriceController::class)->name('coffee-market.prices');
 
-Route::get('/video/gemini_generated_video_079d102d.mp4', HeroVideoController::class)
+Route::get('/media/hero-video.mp4', HeroVideoController::class)
     ->name('hero.video');
+
+// Documentos legales (públicos)
+Route::get('/terminos-y-condiciones', [LegalController::class, 'terms'])->name('legal.terms');
+Route::get('/politica-de-privacidad', [LegalController::class, 'privacy'])->name('legal.privacy');
+Route::get('/politica-de-cookies', [LegalController::class, 'cookies'])->name('legal.cookies');
+Route::get('/politica-de-reembolsos', [LegalController::class, 'refund'])->name('legal.refund');
+
+// Aceptación de documentos vigentes (cuentas antiguas, creadas por un administrador o con versión nueva)
+Route::middleware(['auth', 'active'])->group(function () {
+    Route::get('/aceptar-politicas', [ConsentController::class, 'show'])->name('consent.show');
+    Route::post('/aceptar-politicas', [ConsentController::class, 'store'])->name('consent.store');
+});
 
 // Redirigir usuarios autenticados a sus respectivos dashboards
 Route::get('/dashboard', function () {
@@ -36,10 +50,10 @@ Route::get('/dashboard', function () {
     }
 
     return redirect()->route('peasant.dashboard');
-})->middleware(['auth', 'verified', 'active'])->name('dashboard');
+})->middleware(['auth', 'verified', 'active', 'consent'])->name('dashboard');
 
 // Rutas de administrador
-Route::middleware(['auth', 'verified', 'active', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'verified', 'active', 'consent', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
     // Usuarios
@@ -87,7 +101,7 @@ Route::middleware(['auth', 'verified', 'active', 'admin'])->prefix('admin')->nam
 });
 
 // Rutas de campesino
-Route::middleware(['auth', 'verified', 'active', 'peasant'])->prefix('peasant')->name('peasant.')->group(function () {
+Route::middleware(['auth', 'verified', 'active', 'consent', 'peasant'])->prefix('peasant')->name('peasant.')->group(function () {
     Route::get('/dashboard', [PeasantDashboardController::class, 'index'])->name('dashboard');
 
     // Compras
@@ -105,7 +119,7 @@ Route::middleware(['auth', 'verified', 'active', 'peasant'])->prefix('peasant')-
 });
 
 // Rutas de perfil (para todos los usuarios autenticados)
-Route::middleware(['auth', 'active'])->group(function () {
+Route::middleware(['auth', 'active', 'consent'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

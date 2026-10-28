@@ -103,6 +103,14 @@
                             </label>
                         </div>
                     </div>
+
+                    <div class="md:col-span-2">
+                        <p class="mb-3 text-sm text-gray-600">
+                            Usa esta casilla solo si ya informaste al titular y obtuviste su autorización. De todas formas,
+                            la persona deberá aceptar los documentos por sí misma la primera vez que ingrese.
+                        </p>
+                        <x-consent-checkboxes :assisted="true" />
+                    </div>
                 </div>
 
                 <!-- Botones de acción -->

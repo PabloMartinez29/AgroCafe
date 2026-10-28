@@ -3,14 +3,20 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ConsentRecord;
 use App\Models\Cooperative;
+use App\Services\ConsentService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 
 class CooperativeController extends Controller
 {
+    public function __construct(private ConsentService $consents) {}
+
     public function index()
     {
         $cooperatives = Cooperative::orderBy('created_at', 'desc')->get();
+
         return view('admin.cooperatives.index', compact('cooperatives'));
     }
 
@@ -29,9 +35,12 @@ class CooperativeController extends Controller
             'address' => 'nullable|string',
             'legal_representative' => 'nullable|string|max:100',
             'active' => 'boolean',
-        ]);
+            ...$this->consents->validationRules(),
+        ], $this->consents->validationMessages());
 
-        Cooperative::create($validated);
+        $cooperative = Cooperative::create(Arr::except($validated, ['accept_terms', 'accept_privacy']));
+
+        $this->consents->record($cooperative, $request, ConsentRecord::CHANNEL_ADMIN_ASSISTED, $request->user());
 
         return redirect()->route('admin.cooperatives.index')
             ->with('success', 'Cooperativa creada exitosamente.');
@@ -40,6 +49,7 @@ class CooperativeController extends Controller
     public function show(Cooperative $cooperative)
     {
         $cooperative->load('sales');
+
         return view('admin.cooperatives.show', compact('cooperative'));
     }
 
@@ -52,7 +62,7 @@ class CooperativeController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:150',
-            'nit' => ['required', 'string', 'max:20', 'unique:cooperatives,nit,' . $cooperative->id],
+            'nit' => ['required', 'string', 'max:20', 'unique:cooperatives,nit,'.$cooperative->id],
             'phone' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:100',
             'address' => 'nullable|string',
@@ -72,6 +82,7 @@ class CooperativeController extends Controller
         if ($cooperative->sales()->count() > 0) {
             // Desactivar en lugar de eliminar
             $cooperative->update(['active' => false]);
+
             return redirect()->route('admin.cooperatives.index')
                 ->with('error', 'Cooperativa desactivada (tiene ventas relacionadas).');
         }
@@ -82,4 +93,3 @@ class CooperativeController extends Controller
             ->with('error', 'Cooperativa eliminada exitosamente.');
     }
 }
-

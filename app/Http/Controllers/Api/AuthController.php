@@ -3,13 +3,17 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\ConsentRecord;
 use App\Models\User;
+use App\Services\ConsentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    public function __construct(private ConsentService $consents) {}
+
     public function login(Request $request)
     {
         $request->validate([
@@ -19,16 +23,16 @@ class AuthController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (! $user || ! Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
                 'email' => ['Las credenciales proporcionadas son incorrectas.'],
             ]);
         }
 
         // Verificar si el usuario está activo
-        if (!$user->active) {
+        if (! $user->active) {
             return response()->json([
-                'message' => 'Tu cuenta está inactiva. Por favor contacta al administrador.'
+                'message' => 'Tu cuenta está inactiva. Por favor contacta al administrador.',
             ], 403);
         }
 
@@ -37,6 +41,7 @@ class AuthController extends Controller
         return response()->json([
             'user' => $user,
             'token' => $token,
+            'consents_pending' => $this->consents->pendingDocuments($user),
         ]);
     }
 
@@ -45,7 +50,7 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([
-            'message' => 'Logged out successfully'
+            'message' => 'Logged out successfully',
         ]);
     }
 
@@ -55,9 +60,10 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6|confirmed',
-            'phone' => 'required|string|max:20',
-            'address' => 'required|string|max:500',
-        ]);
+            'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string|max:500',
+            ...$this->consents->validationRules(),
+        ], $this->consents->validationMessages());
 
         $user = User::create([
             'name' => $request->name,
@@ -65,9 +71,11 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
             'phone' => $request->phone,
             'address' => $request->address,
-            'role' => $request->role ?? 'peasant',
+            'role' => 'peasant',
             'active' => true, // Los nuevos usuarios se crean activos
         ]);
+
+        $this->consents->record($user, $request, ConsentRecord::CHANNEL_API_REGISTER);
 
         $token = $user->createToken('mobile-app')->plainTextToken;
 
@@ -82,4 +90,3 @@ class AuthController extends Controller
         return response()->json($request->user());
     }
 }
-
