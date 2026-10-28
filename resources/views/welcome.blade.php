@@ -199,6 +199,8 @@
         }
         .price-title-clip { overflow: hidden; padding-bottom: 0.15em; }
         .price-bar { transform-origin: left center; }
+        .section-title-clip { overflow: hidden; padding-bottom: 0.15em; }
+        .section-bar { transform-origin: center; }
         .is-hscroll .hscroll-sticky {
             position: sticky;
             top: 0;
@@ -509,9 +511,11 @@
     <!-- Consejos de cosecha y venta -->
     <section id="consejos" class="bg-gradient-to-b from-gray-50 to-white">
         <div class="max-w-7xl mx-auto px-4 text-center pt-20 pb-6">
-            <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Consejos para mejorar la cosecha y las ventas</h2>
-            <div class="w-24 h-1 bg-coffee-600 mx-auto mb-6"></div>
-            <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+            <div class="section-title-clip mb-4">
+                <h2 class="section-title text-4xl md:text-5xl font-bold text-gray-900">Consejos para mejorar la cosecha y las ventas</h2>
+            </div>
+            <div class="section-bar w-24 h-1 bg-coffee-600 mx-auto mb-6"></div>
+            <p class="section-line text-xl text-gray-600 max-w-3xl mx-auto" style="--i: 1">
                 Recomendaciones prácticas sobre recolección, beneficio, secado, almacenamiento y calidad del café.
             </p>
         </div>
@@ -1180,7 +1184,10 @@
             const scrubRules = [
                 ['[data-reveal]', 'rise'],
                 ['.price-title', 'title'],
+                ['.section-title', 'title'],
                 ['.price-bar', 'bar'],
+                ['.section-bar', 'bar'],
+                ['.section-line', 'rise'],
                 ['.price-line', 'rise'],
                 ['.price-badge', 'pop'],
                 ['.price-panel', 'right'],
