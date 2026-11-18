@@ -35,7 +35,6 @@ class WelcomeHeroTest extends TestCase
         $response->assertSee('id="heroStage"', false);
         $response->assertSee('id="heroVideo"', false);
         $response->assertSee('webkit-playsinline', false);
-        $response->assertSee('preload="metadata"', false);
         $response->assertSee('preload="none"', false);
         $response->assertSee('data-src="'.route('hero.video').'?v=6"', false);
         $response->assertSee('ensureVideoSource', false);
@@ -43,8 +42,12 @@ class WelcomeHeroTest extends TestCase
         $response->assertSee('desktopPreviewEnabled', false);
         $response->assertSee('id="heroImageOne"', false);
         $response->assertSee('id="heroImageTwo"', false);
-        $response->assertSee('images/hero/1.svg', false);
-        $response->assertSee('images/hero/2.svg?v=3', false);
+        $response->assertSee('images/hero/1.jpg', false);
+        $response->assertSee('images/hero/2.jpg', false);
+        $response->assertDontSee('cdn.tailwindcss.com', false);
+        $response->assertDontSee('cdn.jsdelivr.net/npm/alpinejs', false);
+        $response->assertSee('warmHeroVideo', false);
+        $response->assertSee('media="print"', false);
         $response->assertDontSee('images/hero/finca.jpg', false);
         $response->assertDontSee('images/hero/granos.jpg', false);
         $response->assertSee('data-slide="0"', false);
