@@ -1021,17 +1021,70 @@
                 });
             }
 
+            function showVideoCover(visible) {
+                if (imageOne) {
+                    imageOne.classList.toggle('is-active', visible || currentSlide === 0);
+                }
+
+                if (plantsSlides[0]) {
+                    plantsSlides[0].classList.toggle('is-active', visible || currentSlide === 0);
+                }
+            }
+
             function markVideoPlaying() {
                 videoReady = true;
                 pendingVideoPlay = false;
 
-                if (currentSlide === 1 && imageOne) {
-                    imageOne.classList.remove('is-active');
+                if (currentSlide === 1) {
+                    showVideoCover(false);
+                }
+            }
+
+            function markVideoBuffering() {
+                if (currentSlide !== 1 || videoFailed) {
+                    return;
                 }
 
-                if (currentSlide === 1 && plantsSlides[0]) {
-                    plantsSlides[0].classList.remove('is-active');
+                videoReady = false;
+                showVideoCover(true);
+            }
+
+            function whenVideoCanPlay(callback) {
+                if (!video || videoFailed) {
+                    callback(false);
+                    return;
                 }
+
+                ensureVideoSource(video);
+
+                if (video.readyState >= 3) {
+                    callback(true);
+                    return;
+                }
+
+                let settled = false;
+                const finish = function (ready) {
+                    if (settled) {
+                        return;
+                    }
+
+                    settled = true;
+                    video.removeEventListener('canplay', onCanPlay);
+                    video.removeEventListener('error', onError);
+                    callback(ready);
+                };
+                const onCanPlay = function () {
+                    finish(true);
+                };
+                const onError = function () {
+                    finish(false);
+                };
+
+                video.addEventListener('canplay', onCanPlay, { once: true });
+                video.addEventListener('error', onError, { once: true });
+                window.setTimeout(function () {
+                    finish(video.readyState >= 2);
+                }, 2500);
             }
 
             function playFromStart() {
@@ -1042,8 +1095,15 @@
                 videoReady = false;
                 pendingVideoPlay = true;
                 ensureVideoSource(video);
+                showVideoCover(true);
 
                 const begin = function () {
+                    if (currentSlide !== 1) {
+                        return;
+                    }
+
+                    silence(video);
+
                     const attempt = video.play();
 
                     if (!attempt || typeof attempt.then !== 'function') {
@@ -1054,32 +1114,43 @@
                         markVideoPlaying();
                     }).catch(function () {
                         pendingVideoPlay = true;
+                        markVideoBuffering();
                     });
                 };
 
-                if (video.readyState < 2) {
-                    video.addEventListener('loadeddata', function () {
-                        if (currentSlide === 1) {
+                const startPlayback = function () {
+                    if (video.currentTime > 0.05) {
+                        video.addEventListener('seeked', begin, { once: true });
+
+                        try {
+                            video.currentTime = 0;
+                        } catch (error) {
                             begin();
                         }
-                    }, { once: true });
 
-                    return;
-                }
-
-                if (video.currentTime > 0.05) {
-                    video.addEventListener('seeked', begin, { once: true });
-
-                    try {
-                        video.currentTime = 0;
-                    } catch (error) {
-                        begin();
+                        return;
                     }
 
+                    begin();
+                };
+
+                if (video.readyState >= 3) {
+                    startPlayback();
                     return;
                 }
 
-                begin();
+                whenVideoCanPlay(function (ready) {
+                    if (currentSlide !== 1) {
+                        return;
+                    }
+
+                    if (!ready && video.readyState < 2) {
+                        showSlide(2);
+                        return;
+                    }
+
+                    startPlayback();
+                });
             }
 
             function unlockVideos() {
@@ -1094,6 +1165,50 @@
                     ensureVideoSource(preview);
                     preview.play().catch(function () {});
                 }
+            }
+
+            function warmHeroVideo() {
+                if (!video || videoFailed) {
+                    return;
+                }
+
+                ensureVideoSource(video);
+                silence(video);
+
+                whenVideoCanPlay(function (ready) {
+                    if (!ready || currentSlide !== 0 || !video.paused) {
+                        return;
+                    }
+
+                    video.play().then(function () {
+                        if (currentSlide === 0) {
+                            video.pause();
+
+                            try {
+                                video.currentTime = 0;
+                            } catch (error) {
+                                // iOS may reject seeking before enough data is available.
+                            }
+                        }
+                    }).catch(function () {
+                        // Autoplay may still need a user gesture on some browsers.
+                    });
+                });
+            }
+
+            function advanceFromFirstImage() {
+                if (!video || videoFailed) {
+                    showSlide(2);
+                    return;
+                }
+
+                whenVideoCanPlay(function () {
+                    if (currentSlide !== 0) {
+                        return;
+                    }
+
+                    showSlide(1);
+                });
             }
 
             function showSlide(index) {
@@ -1114,8 +1229,8 @@
                     slide.classList.toggle('is-active', slideIndex === index);
                 });
 
-                if (index === 1 && imageOne) {
-                    imageOne.classList.add('is-active');
+                if (index === 1) {
+                    showVideoCover(true);
                 }
 
                 markSlides.forEach(function (mark, markIndex) {
@@ -1186,8 +1301,14 @@
                     return;
                 }
 
-                if (video) {
+                if (video && index !== 1) {
                     video.pause();
+                }
+
+                if (index === 0) {
+                    warmHeroVideo();
+                    imageTimer = window.setTimeout(advanceFromFirstImage, holdFor(index));
+                    return;
                 }
 
                 imageTimer = window.setTimeout(function () {
@@ -1200,6 +1321,8 @@
 
             if (video) {
                 video.addEventListener('playing', markVideoPlaying);
+                video.addEventListener('waiting', markVideoBuffering);
+                video.addEventListener('stalled', markVideoBuffering);
                 video.addEventListener('ended', function () {
                     if (currentSlide === 1) {
                         showSlide(2);
@@ -1222,16 +1345,6 @@
             ['touchstart', 'touchend', 'click', 'pointerdown'].forEach(function (eventName) {
                 window.addEventListener(eventName, unlockVideos, { passive: true, once: true });
             });
-
-            const warmHeroVideo = function () {
-                ensureVideoSource(video);
-            };
-
-            if (window.requestIdleCallback) {
-                window.requestIdleCallback(warmHeroVideo, { timeout: 1800 });
-            } else {
-                window.setTimeout(warmHeroVideo, 1200);
-            }
 
             window.setInterval(paintSlideProgress, 100);
             showSlide(0);
