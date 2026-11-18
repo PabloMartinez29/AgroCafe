@@ -16,6 +16,11 @@ class HeroVideoController extends Controller
             'Content-Type' => 'video/mp4',
             'Content-Disposition' => 'inline',
             'Accept-Ranges' => 'bytes',
+            'X-Content-Type-Options' => 'nosniff',
+        ])->setCache([
+            'public' => true,
+            'max_age' => 604800,
+            'immutable' => true,
         ]);
     }
 

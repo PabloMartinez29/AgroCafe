@@ -274,11 +274,14 @@
                 aria-hidden="true">
             <video
                 muted
+                defaultmuted
                 playsinline
+                webkit-playsinline
                 class="hero-slide absolute inset-0 h-full w-full object-cover"
                 id="heroVideo"
-                preload="auto">
-                <source src="{{ route('hero.video') }}?v=5" type="video/mp4">
+                preload="metadata"
+                data-src="{{ route('hero.video') }}?v=6"
+                aria-hidden="true">
             </video>
             <img
                 id="heroImageTwo"
@@ -361,11 +364,13 @@
                             id="heroPreview"
                             class="hero-thumb absolute inset-0 h-full w-full object-cover"
                             muted
+                            defaultmuted
                             loop
                             playsinline
-                            preload="auto"
+                            webkit-playsinline
+                            preload="none"
+                            data-src="{{ route('hero.video') }}?v=6"
                             aria-hidden="true">
-                            <source src="{{ route('hero.video') }}?v=5" type="video/mp4">
                         </video>
                         <img
                             id="heroPreviewTwo"
@@ -440,8 +445,8 @@
                     </span>
                     <a href="https://federaciondecafeteros.org/" class="text-xs font-semibold text-coffee-700" target="_blank" rel="noopener noreferrer">Fuente: Federación Nacional de Cafeteros</a>
                 </div>
-                <p id="marketPriceStatus" class="mt-4 text-sm text-gray-600">Consultando el precio del mercado…</p>
-                <p id="marketPriceNote" class="mt-1 text-xs text-gray-500"></p>
+                <p id="marketPriceStatus" class="mt-4 min-h-[1.25rem] text-sm text-gray-600">Consultando el precio del mercado…</p>
+                <p id="marketPriceNote" class="mt-1 min-h-[1rem] text-xs text-gray-500"></p>
             </div>
 
             <div id="precios-mercado" class="price-panel overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-xl" aria-live="polite">
@@ -450,57 +455,57 @@
                 </div>
                 <ul class="divide-y divide-gray-100">
                     <li class="price-row flex items-center justify-between gap-4 px-6 py-5" style="--i: 0">
-                        <div class="flex items-center gap-4">
+                        <div class="flex min-w-0 items-center gap-4">
                             <span data-cafe-foto="verde" style="--i: 0" class="price-photo block h-16 w-16 shrink-0 overflow-hidden rounded-full bg-coffee-100 ring-2 ring-coffee-200">
                                 @if ($fotoVerde)
-                                    <img src="{{ $fotoVerde }}" alt="Café verde" class="h-full w-full object-cover">
+                                    <img src="{{ $fotoVerde }}" alt="Café verde" class="h-full w-full object-cover" width="64" height="64" decoding="async">
                                 @endif
                             </span>
-                            <div>
+                            <div class="min-w-0">
                                 <p class="font-semibold text-gray-900">Café verde</p>
                                 <p class="text-sm text-gray-500" data-market-unit="verde">por kilogramo</p>
-                                <p class="text-xs text-gray-400" data-market-date="verde"></p>
+                                <p class="mt-0.5 min-h-[1rem] text-xs text-gray-400" data-market-date="verde"></p>
                             </div>
                         </div>
-                        <div class="text-right">
+                        <div class="shrink-0 text-right">
                             <p class="price-value text-2xl font-bold text-coffee-700" style="--i: 0" data-market-price="verde">—</p>
-                            <p class="text-xs text-gray-500" data-market-extra="verde"></p>
+                            <p class="min-h-[1rem] text-xs text-gray-500" data-market-extra="verde"></p>
                         </div>
                     </li>
                     <li class="price-row price-row-featured flex items-center justify-between gap-4 bg-coffee-50 px-6 py-5" style="--i: 1">
-                        <div class="flex items-center gap-4">
+                        <div class="flex min-w-0 items-center gap-4">
                             <span data-cafe-foto="seco" style="--i: 1" class="price-photo block h-16 w-16 shrink-0 overflow-hidden rounded-full bg-coffee-200 ring-2 ring-coffee-600">
                                 @if ($fotoSeco)
-                                    <img src="{{ $fotoSeco }}" alt="Café seco" class="h-full w-full object-cover">
+                                    <img src="{{ $fotoSeco }}" alt="Café seco" class="h-full w-full object-cover" width="64" height="64" decoding="async">
                                 @endif
                             </span>
-                            <div>
+                            <div class="min-w-0">
                                 <p class="font-semibold text-gray-900">Café seco</p>
                                 <p class="text-sm text-gray-500" data-market-unit="seco">carga de 125 kg</p>
-                                <p class="text-xs text-gray-400" data-market-date="seco"></p>
+                                <p class="mt-0.5 min-h-[1rem] text-xs text-gray-400" data-market-date="seco"></p>
                             </div>
                         </div>
-                        <div class="text-right">
+                        <div class="shrink-0 text-right">
                             <p class="price-value text-2xl font-bold text-coffee-700" style="--i: 1" data-market-price="seco">—</p>
-                            <p class="text-xs text-gray-500" data-market-extra="seco"></p>
+                            <p class="min-h-[1rem] text-xs text-gray-500" data-market-extra="seco"></p>
                         </div>
                     </li>
                     <li class="price-row flex items-center justify-between gap-4 px-6 py-5" style="--i: 2">
-                        <div class="flex items-center gap-4">
+                        <div class="flex min-w-0 items-center gap-4">
                             <span data-cafe-foto="pasilla" style="--i: 2" class="price-photo block h-16 w-16 shrink-0 overflow-hidden rounded-full bg-coffee-100 ring-2 ring-coffee-200">
                                 @if ($fotoPasilla)
-                                    <img src="{{ $fotoPasilla }}" alt="Pasilla" class="h-full w-full object-cover">
+                                    <img src="{{ $fotoPasilla }}" alt="Pasilla" class="h-full w-full object-cover" width="64" height="64" decoding="async">
                                 @endif
                             </span>
-                            <div>
+                            <div class="min-w-0">
                                 <p class="font-semibold text-gray-900">Pasilla</p>
                                 <p class="text-sm text-gray-500" data-market-unit="pasilla">por kilogramo</p>
-                                <p class="text-xs text-gray-400" data-market-date="pasilla"></p>
+                                <p class="mt-0.5 min-h-[1rem] text-xs text-gray-400" data-market-date="pasilla"></p>
                             </div>
                         </div>
-                        <div class="text-right">
+                        <div class="shrink-0 text-right">
                             <p class="price-value text-2xl font-bold text-coffee-700" style="--i: 2" data-market-price="pasilla">—</p>
-                            <p class="text-xs text-gray-500" data-market-extra="pasilla"></p>
+                            <p class="min-h-[1rem] text-xs text-gray-500" data-market-extra="pasilla"></p>
                         </div>
                     </li>
                 </ul>
@@ -925,6 +930,9 @@
             let currentSlide = 0;
             let imageTimer = 0;
             let slideStarted = Date.now();
+            let videoReady = false;
+            let videoFailed = false;
+            let pendingVideoPlay = false;
 
             function silence(element) {
                 if (!element) {
@@ -932,8 +940,37 @@
                 }
 
                 element.muted = true;
-                element.volume = 0;
                 element.defaultMuted = true;
+                element.volume = 0;
+                element.playsInline = true;
+                element.setAttribute('playsinline', '');
+                element.setAttribute('webkit-playsinline', '');
+                element.setAttribute('muted', '');
+            }
+
+            function ensureVideoSource(element) {
+                if (!element || element.dataset.loaded === '1') {
+                    return false;
+                }
+
+                const src = element.dataset.src;
+
+                if (!src) {
+                    return false;
+                }
+
+                const source = document.createElement('source');
+                source.src = src;
+                source.type = 'video/mp4';
+                element.appendChild(source);
+                element.dataset.loaded = '1';
+                element.load();
+
+                return true;
+            }
+
+            function desktopPreviewEnabled() {
+                return window.matchMedia('(min-width: 640px)').matches;
             }
 
             function paintSlideProgress() {
@@ -943,7 +980,7 @@
 
                 let amount = Math.min(100, ((Date.now() - slideStarted) / holdFor(currentSlide)) * 100);
 
-                if (currentSlide === 1 && video && Number.isFinite(video.duration) && video.duration > 0) {
+                if (currentSlide === 1 && video && Number.isFinite(video.duration) && video.duration > 0 && !video.paused) {
                     amount = Math.min(100, (video.currentTime / video.duration) * 100);
                 }
 
@@ -960,14 +997,51 @@
                 });
             }
 
+            function markVideoPlaying() {
+                videoReady = true;
+                pendingVideoPlay = false;
+
+                if (currentSlide === 1 && imageOne) {
+                    imageOne.classList.remove('is-active');
+                }
+
+                if (currentSlide === 1 && plantsSlides[0]) {
+                    plantsSlides[0].classList.remove('is-active');
+                }
+            }
+
             function playFromStart() {
+                if (!video || videoFailed) {
+                    return;
+                }
+
+                videoReady = false;
+                pendingVideoPlay = true;
+                ensureVideoSource(video);
+
                 const begin = function () {
-                    video.play().catch(function () {
-                        imageTimer = window.setTimeout(function () {
-                            showSlide(2);
-                        }, imageHoldMs);
+                    const attempt = video.play();
+
+                    if (!attempt || typeof attempt.then !== 'function') {
+                        return;
+                    }
+
+                    attempt.then(function () {
+                        markVideoPlaying();
+                    }).catch(function () {
+                        pendingVideoPlay = true;
                     });
                 };
+
+                if (video.readyState < 2) {
+                    video.addEventListener('loadeddata', function () {
+                        if (currentSlide === 1) {
+                            begin();
+                        }
+                    }, { once: true });
+
+                    return;
+                }
 
                 if (video.currentTime > 0.05) {
                     video.addEventListener('seeked', begin, { once: true });
@@ -984,10 +1058,29 @@
                 begin();
             }
 
+            function unlockVideos() {
+                silence(video);
+                silence(preview);
+
+                if (video && video.paused && (currentSlide === 1 || pendingVideoPlay)) {
+                    playFromStart();
+                }
+
+                if (preview && desktopPreviewEnabled() && currentSlide === 1) {
+                    ensureVideoSource(preview);
+                    preview.play().catch(function () {});
+                }
+            }
+
             function showSlide(index) {
                 currentSlide = index;
                 slideStarted = Date.now();
                 window.clearTimeout(imageTimer);
+                pendingVideoPlay = false;
+
+                if (index === 1) {
+                    videoReady = false;
+                }
 
                 slides.forEach(function (slide, slideIndex) {
                     if (!slide) {
@@ -996,6 +1089,10 @@
 
                     slide.classList.toggle('is-active', slideIndex === index);
                 });
+
+                if (index === 1 && imageOne) {
+                    imageOne.classList.add('is-active');
+                }
 
                 markSlides.forEach(function (mark, markIndex) {
                     if (mark) {
@@ -1012,7 +1109,8 @@
 
                 plantsSlides.forEach(function (plants, plantsIndex) {
                     if (plants) {
-                        plants.classList.toggle('is-active', plantsIndex === index);
+                        const keepCover = index === 1 && plantsIndex === 0 && !videoReady;
+                        plants.classList.toggle('is-active', plantsIndex === index || keepCover);
                     }
                 });
 
@@ -1025,7 +1123,8 @@
                 });
 
                 if (preview) {
-                    if (index === 1) {
+                    if (index === 1 && desktopPreviewEnabled()) {
+                        ensureVideoSource(preview);
                         preview.play().catch(function () {});
                     } else {
                         preview.pause();
@@ -1041,21 +1140,24 @@
                 });
 
                 if (index === 1 && video) {
-                    if (video.readyState >= 2) {
-                        playFromStart();
-                    } else {
-                        video.addEventListener('loadeddata', function () {
-                            if (currentSlide === 1) {
-                                playFromStart();
-                            }
-                        }, { once: true });
+                    if (videoFailed) {
+                        showSlide(2);
+                        return;
                     }
 
+                    playFromStart();
+
                     imageTimer = window.setTimeout(function () {
-                        if (currentSlide === 1 && (video.ended || video.paused)) {
+                        if (currentSlide === 1 && (video.ended || (video.paused && video.readyState < 2))) {
                             showSlide(2);
+                        } else if (currentSlide === 1 && video.paused && pendingVideoPlay) {
+                            imageTimer = window.setTimeout(function () {
+                                if (currentSlide === 1) {
+                                    showSlide(2);
+                                }
+                            }, 8000);
                         }
-                    }, 14000);
+                    }, 16000);
 
                     return;
                 }
@@ -1073,6 +1175,9 @@
             silence(preview);
 
             if (video) {
+                ensureVideoSource(video);
+
+                video.addEventListener('playing', markVideoPlaying);
                 video.addEventListener('ended', function () {
                     if (currentSlide === 1) {
                         showSlide(2);
@@ -1080,6 +1185,8 @@
                 });
 
                 video.addEventListener('error', function () {
+                    videoFailed = true;
+
                     if (fallback) {
                         fallback.style.display = 'block';
                     }
@@ -1089,6 +1196,10 @@
                     }
                 });
             }
+
+            ['touchstart', 'touchend', 'click', 'pointerdown'].forEach(function (eventName) {
+                window.addEventListener(eventName, unlockVideos, { passive: true, once: true });
+            });
 
             window.setInterval(paintSlideProgress, 100);
             showSlide(0);
@@ -1235,28 +1346,78 @@
                 return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2);
             };
 
-            const scrubStyles = function (variant, p, element) {
+            const compactViewport = window.matchMedia('(max-width: 1023px)');
+            let scrubViewport = window.innerHeight;
+            let scrubCompact = compactViewport.matches;
+
+            const refreshScrubMetrics = function () {
+                scrubViewport = window.innerHeight;
+                scrubCompact = compactViewport.matches;
+            };
+
+            const heroStage = document.getElementById('heroStage');
+
+            const lockHeroHeight = function () {
+                if (!heroStage) {
+                    return;
+                }
+
+                heroStage.style.height = window.innerHeight + 'px';
+            };
+
+            lockHeroHeight();
+            refreshScrubMetrics();
+
+            window.addEventListener('orientationchange', function () {
+                window.setTimeout(function () {
+                    lockHeroHeight();
+                    refreshScrubMetrics();
+                }, 350);
+            });
+
+            window.addEventListener('resize', function () {
+                if (Math.abs(window.innerHeight - scrubViewport) < 120) {
+                    return;
+                }
+
+                lockHeroHeight();
+                refreshScrubMetrics();
+            });
+
+            const scrubStyles = function (variant, p) {
                 const e = 1 - Math.pow(1 - p, 3);
                 const rest = 1 - e;
-                const blur = 'blur(' + (rest * 6).toFixed(2) + 'px)';
+                const blur = scrubCompact ? undefined : 'blur(' + (rest * 6).toFixed(2) + 'px)';
 
                 switch (variant) {
                     case 'title':
-                        return { opacity: '1', translate: '0 ' + (rest * 115).toFixed(2) + '%', rotate: (rest * 3).toFixed(2) + 'deg' };
+                        return scrubCompact
+                            ? { opacity: String(p), translate: '0 ' + (rest * 36).toFixed(1) + 'px' }
+                            : { opacity: '1', translate: '0 ' + (rest * 115).toFixed(2) + '%', rotate: (rest * 3).toFixed(2) + 'deg' };
                     case 'bar':
                         return { opacity: String(p), scale: e.toFixed(3) + ' 1' };
                     case 'pop':
-                        return { opacity: String(clamp01(p * 2)), scale: String(Math.max(backOut(p), 0).toFixed(3)) };
+                        return scrubCompact
+                            ? { opacity: String(clamp01(p * 2)), scale: (0.92 + 0.08 * e).toFixed(3) }
+                            : { opacity: String(clamp01(p * 2)), scale: String(Math.max(backOut(p), 0).toFixed(3)) };
                     case 'right':
-                        return { opacity: String(p), translate: (rest * 90).toFixed(1) + 'px ' + (rest * 40).toFixed(1) + 'px', scale: (0.92 + 0.08 * e).toFixed(3), rotate: (rest * 3).toFixed(2) + 'deg', filter: blur };
+                        return scrubCompact
+                            ? { opacity: String(p), translate: '0 ' + (rest * 24).toFixed(1) + 'px' }
+                            : { opacity: String(p), translate: (rest * 90).toFixed(1) + 'px ' + (rest * 40).toFixed(1) + 'px', scale: (0.92 + 0.08 * e).toFixed(3), rotate: (rest * 3).toFixed(2) + 'deg', filter: blur };
                     case 'row':
-                        return { opacity: String(p), translate: (rest * 70).toFixed(1) + 'px 0', filter: blur };
+                        return scrubCompact
+                            ? { opacity: String(p), translate: '0 ' + (rest * 18).toFixed(1) + 'px' }
+                            : { opacity: String(p), translate: (rest * 70).toFixed(1) + 'px 0', filter: blur };
                     case 'photo':
-                        return { opacity: String(clamp01(p * 2)), scale: String(Math.max(backOut(p), 0).toFixed(3)), rotate: (rest * -200).toFixed(1) + 'deg' };
+                        return scrubCompact
+                            ? { opacity: String(clamp01(p * 2)), scale: (0.9 + 0.1 * e).toFixed(3) }
+                            : { opacity: String(clamp01(p * 2)), scale: String(Math.max(backOut(p), 0).toFixed(3)), rotate: (rest * -200).toFixed(1) + 'deg' };
                     case 'value':
-                        return { opacity: String(p), translate: '0 ' + (rest * 18).toFixed(1) + 'px', scale: (0.85 + 0.15 * e).toFixed(3) };
+                        return { opacity: String(p), translate: '0 ' + (rest * (scrubCompact ? 12 : 18)).toFixed(1) + 'px', scale: (0.9 + 0.1 * e).toFixed(3) };
                     default:
-                        return { opacity: String(p), translate: '0 ' + (rest * 60).toFixed(1) + 'px', filter: blur };
+                        return scrubCompact
+                            ? { opacity: String(p), translate: '0 ' + (rest * 28).toFixed(1) + 'px' }
+                            : { opacity: String(p), translate: '0 ' + (rest * 60).toFixed(1) + 'px', filter: blur };
                 }
             };
 
@@ -1265,7 +1426,7 @@
             const parallaxBlobs = priceStage ? priceStage.querySelectorAll('[data-parallax]') : [];
 
             const paintScrub = function () {
-                const viewport = window.innerHeight;
+                const viewport = scrubViewport;
                 const scrollTop = window.scrollY;
                 const start = viewport * 0.94;
                 const span = viewport * 0.34;
@@ -1284,7 +1445,7 @@
                             style.removeProperty(prop);
                         });
                     } else {
-                        const values = scrubStyles(item.variant, p, item.element);
+                        const values = scrubStyles(item.variant, p);
 
                         scrubProps.forEach(function (prop) {
                             if (values[prop] !== undefined) {
@@ -1300,12 +1461,16 @@
                     }
                 });
 
-                if (priceStage && parallaxBlobs.length) {
+                if (priceStage && parallaxBlobs.length && !scrubCompact) {
                     const rect = priceStage.getBoundingClientRect();
                     const offset = rect.top + rect.height / 2 - viewport / 2;
 
                     parallaxBlobs.forEach(function (blob) {
                         blob.style.setProperty('--py', (offset * Number(blob.dataset.parallax)) + 'px');
+                    });
+                } else if (scrubCompact) {
+                    parallaxBlobs.forEach(function (blob) {
+                        blob.style.removeProperty('--py');
                     });
                 }
             };
