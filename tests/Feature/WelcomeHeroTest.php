@@ -34,6 +34,13 @@ class WelcomeHeroTest extends TestCase
         $response->assertSee('data-reveal', false);
         $response->assertSee('id="heroStage"', false);
         $response->assertSee('id="heroVideo"', false);
+        $response->assertSee('webkit-playsinline', false);
+        $response->assertSee('preload="metadata"', false);
+        $response->assertSee('preload="none"', false);
+        $response->assertSee('data-src="'.route('hero.video').'?v=6"', false);
+        $response->assertSee('ensureVideoSource', false);
+        $response->assertSee('unlockVideos', false);
+        $response->assertSee('desktopPreviewEnabled', false);
         $response->assertSee('id="heroImageOne"', false);
         $response->assertSee('id="heroImageTwo"', false);
         $response->assertSee('images/hero/1.svg', false);
@@ -98,6 +105,10 @@ class WelcomeHeroTest extends TestCase
         $response->assertSee('price-value', false);
         $response->assertSee('data-parallax', false);
         $response->assertSee('paintScrub', false);
+        $response->assertSee('lockHeroHeight', false);
+        $response->assertSee('scrubCompact', false);
+        $response->assertSee('min-h-[1rem] text-xs text-gray-400" data-market-date', false);
+        $response->assertSee('min-h-[1rem] text-xs text-gray-500" data-market-extra', false);
         $response->assertSee("addEventListener('scroll', requestScrub", false);
         $response->assertSee("['.price-panel', 'right']", false);
         $response->assertSee("'footer .grid > *'", false);
@@ -194,6 +205,8 @@ class WelcomeHeroTest extends TestCase
             $response->assertStatus(206);
             $response->assertHeader('Accept-Ranges', 'bytes');
             $response->assertHeader('Content-Range', 'bytes 0-99/'.$size);
+            $this->assertStringContainsString('max-age=604800', (string) $response->headers->get('Cache-Control'));
+            $this->assertStringContainsString('public', (string) $response->headers->get('Cache-Control'));
         } finally {
             if ($createdTemporaryVideo) {
                 unlink($videoPath);
