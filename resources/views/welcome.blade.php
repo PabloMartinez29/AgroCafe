@@ -8,25 +8,26 @@
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800&display=swap" rel="stylesheet" />
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" 
-          integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" 
-          crossorigin="anonymous" referrerpolicy="no-referrer" />
-    
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Alpine.js -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    
-            @vite(['resources/css/app.css', 'resources/js/app.js'])
-    
-            <style>
-        [x-cloak] { display: none !important; }
+
+    <!-- Font Awesome (deferred so it does not block the first paint) -->
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+        integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+        crossorigin="anonymous"
+        referrerpolicy="no-referrer"
+        media="print"
+        onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+    </noscript>
+
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <style>
         .hero-background {
             background: linear-gradient(135deg, #7a5f47 0%, #5a4535 50%, #3d2f24 100%);
         }
@@ -269,8 +270,12 @@
             <img
                 id="heroImageOne"
                 class="hero-slide is-active pointer-events-none absolute inset-0 h-full w-full object-cover"
-                src="{{ asset('images/hero/1.svg') }}"
+                src="{{ asset('images/hero/1.jpg') }}?v=1"
                 alt=""
+                width="1600"
+                height="1067"
+                fetchpriority="high"
+                decoding="async"
                 aria-hidden="true">
             <video
                 muted
@@ -279,30 +284,42 @@
                 webkit-playsinline
                 class="hero-slide absolute inset-0 h-full w-full object-cover"
                 id="heroVideo"
-                preload="metadata"
+                preload="none"
                 data-src="{{ route('hero.video') }}?v=6"
                 aria-hidden="true">
             </video>
             <img
                 id="heroImageTwo"
                 class="hero-slide pointer-events-none absolute inset-0 h-full w-full object-cover"
-                src="{{ asset('images/hero/2.svg') }}?v=3"
+                src="{{ asset('images/hero/2.jpg') }}?v=1"
                 alt=""
+                width="1600"
+                height="1066"
+                loading="lazy"
+                decoding="async"
                 aria-hidden="true">
             <div class="absolute inset-0 hero-background" id="videoFallback" style="display: none;"></div>
             <p id="heroMarkAgro" class="hero-word is-active pointer-events-none absolute inset-x-0" aria-hidden="true">AGRO</p>
             <img
                 id="heroPlantsOne"
                 class="hero-slide hero-plants is-active pointer-events-none absolute inset-0 h-full w-full object-cover"
-                src="{{ asset('images/hero/1.svg') }}"
+                src="{{ asset('images/hero/1.jpg') }}?v=1"
                 alt=""
+                width="1600"
+                height="1067"
+                fetchpriority="high"
+                decoding="async"
                 aria-hidden="true">
             <p id="heroMarkCafe" class="hero-word pointer-events-none absolute inset-x-0" aria-hidden="true">CAFÉ</p>
             <img
                 id="heroPlantsTwo"
                 class="hero-slide hero-plants pointer-events-none absolute inset-0 h-full w-full object-cover"
-                src="{{ asset('images/hero/2.svg') }}?v=3"
+                src="{{ asset('images/hero/2.jpg') }}?v=1"
                 alt=""
+                width="1600"
+                height="1066"
+                loading="lazy"
+                decoding="async"
                 aria-hidden="true">
             <div class="pointer-events-none absolute inset-0 z-[7] hero-shade"></div>
 
@@ -357,8 +374,11 @@
                         <img
                             id="heroPreviewOne"
                             class="hero-thumb is-active absolute inset-0 h-full w-full object-cover"
-                            src="{{ asset('images/hero/1.svg') }}"
+                            src="{{ asset('images/hero/1.jpg') }}?v=1"
                             alt=""
+                            width="320"
+                            height="213"
+                            decoding="async"
                             aria-hidden="true">
                         <video
                             id="heroPreview"
@@ -375,8 +395,12 @@
                         <img
                             id="heroPreviewTwo"
                             class="hero-thumb absolute inset-0 h-full w-full object-cover"
-                            src="{{ asset('images/hero/2.svg') }}?v=3"
+                            src="{{ asset('images/hero/2.jpg') }}?v=1"
                             alt=""
+                            width="320"
+                            height="213"
+                            loading="lazy"
+                            decoding="async"
                             aria-hidden="true">
                         <div class="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-3 pb-2.5 pt-8">
                             <p class="mb-1.5 text-[11px] font-medium tracking-wide text-white/90" id="heroClipLabel">01/03</p>
@@ -401,7 +425,7 @@
     <!-- Precios actuales -->
     @php
         $fotoCafe = function (string $nombre): ?string {
-            foreach (['svg', 'jpg', 'jpeg', 'png', 'webp'] as $extension) {
+            foreach (['jpg', 'jpeg', 'webp', 'png', 'svg'] as $extension) {
                 if (is_file(public_path("images/cafe/{$nombre}.{$extension}"))) {
                     return asset("images/cafe/{$nombre}.{$extension}");
                 }
@@ -458,7 +482,7 @@
                         <div class="flex min-w-0 items-center gap-4">
                             <span data-cafe-foto="verde" style="--i: 0" class="price-photo block h-16 w-16 shrink-0 overflow-hidden rounded-full bg-coffee-100 ring-2 ring-coffee-200">
                                 @if ($fotoVerde)
-                                    <img src="{{ $fotoVerde }}" alt="Café verde" class="h-full w-full object-cover" width="64" height="64" decoding="async">
+                                    <img src="{{ $fotoVerde }}" alt="Café verde" class="h-full w-full object-cover" width="64" height="64" loading="lazy" decoding="async">
                                 @endif
                             </span>
                             <div class="min-w-0">
@@ -476,7 +500,7 @@
                         <div class="flex min-w-0 items-center gap-4">
                             <span data-cafe-foto="seco" style="--i: 1" class="price-photo block h-16 w-16 shrink-0 overflow-hidden rounded-full bg-coffee-200 ring-2 ring-coffee-600">
                                 @if ($fotoSeco)
-                                    <img src="{{ $fotoSeco }}" alt="Café seco" class="h-full w-full object-cover" width="64" height="64" decoding="async">
+                                    <img src="{{ $fotoSeco }}" alt="Café seco" class="h-full w-full object-cover" width="64" height="64" loading="lazy" decoding="async">
                                 @endif
                             </span>
                             <div class="min-w-0">
@@ -494,7 +518,7 @@
                         <div class="flex min-w-0 items-center gap-4">
                             <span data-cafe-foto="pasilla" style="--i: 2" class="price-photo block h-16 w-16 shrink-0 overflow-hidden rounded-full bg-coffee-100 ring-2 ring-coffee-200">
                                 @if ($fotoPasilla)
-                                    <img src="{{ $fotoPasilla }}" alt="Pasilla" class="h-full w-full object-cover" width="64" height="64" decoding="async">
+                                    <img src="{{ $fotoPasilla }}" alt="Pasilla" class="h-full w-full object-cover" width="64" height="64" loading="lazy" decoding="async">
                                 @endif
                             </span>
                             <div class="min-w-0">
@@ -1175,8 +1199,6 @@
             silence(preview);
 
             if (video) {
-                ensureVideoSource(video);
-
                 video.addEventListener('playing', markVideoPlaying);
                 video.addEventListener('ended', function () {
                     if (currentSlide === 1) {
@@ -1200,6 +1222,16 @@
             ['touchstart', 'touchend', 'click', 'pointerdown'].forEach(function (eventName) {
                 window.addEventListener(eventName, unlockVideos, { passive: true, once: true });
             });
+
+            const warmHeroVideo = function () {
+                ensureVideoSource(video);
+            };
+
+            if (window.requestIdleCallback) {
+                window.requestIdleCallback(warmHeroVideo, { timeout: 1800 });
+            } else {
+                window.setTimeout(warmHeroVideo, 1200);
+            }
 
             window.setInterval(paintSlideProgress, 100);
             showSlide(0);

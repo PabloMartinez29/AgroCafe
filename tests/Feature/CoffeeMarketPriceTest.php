@@ -19,9 +19,10 @@ class CoffeeMarketPriceTest extends TestCase
         $response->assertSee('Café verde', false);
         $response->assertSee('Café seco', false);
         $response->assertSee('Lista de precios', false);
-        $response->assertSee('images/cafe/verde.svg', false);
-        $response->assertSee('images/cafe/seco.svg', false);
-        $response->assertSee('images/cafe/pasilla.svg', false);
+        $response->assertSee('images/cafe/verde.jpg', false);
+        $response->assertSee('images/cafe/seco.jpg', false);
+        $response->assertSee('images/cafe/pasilla.jpg', false);
+        $response->assertDontSee('images/cafe/verde.svg', false);
         $response->assertSee('data-cafe-foto="verde"', false);
         $response->assertSee('data-cafe-foto="seco"', false);
         $response->assertSee('data-cafe-foto="pasilla"', false);
