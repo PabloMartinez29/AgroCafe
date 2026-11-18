@@ -31,6 +31,9 @@ class RegistrationTest extends TestCase
         $response = $this->get('/register');
 
         $response->assertStatus(200);
+        $response->assertDontSee('max-h-[90vh]', false);
+        $response->assertDontSee('overflow-y-auto', false);
+        $response->assertSee('min-h-[100svh]', false);
     }
 
     public function test_registration_screen_shows_two_separate_unchecked_consent_checkboxes_with_links(): void
