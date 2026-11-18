@@ -47,6 +47,10 @@ class WelcomeHeroTest extends TestCase
         $response->assertDontSee('cdn.tailwindcss.com', false);
         $response->assertDontSee('cdn.jsdelivr.net/npm/alpinejs', false);
         $response->assertSee('warmHeroVideo', false);
+        $response->assertSee('advanceFromFirstImage', false);
+        $response->assertSee('whenVideoCanPlay', false);
+        $response->assertSee("addEventListener('canplay'", false);
+        $response->assertSee("addEventListener('waiting'", false);
         $response->assertSee('media="print"', false);
         $response->assertDontSee('images/hero/finca.jpg', false);
         $response->assertDontSee('images/hero/granos.jpg', false);
